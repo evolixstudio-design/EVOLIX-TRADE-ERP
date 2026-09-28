@@ -1,0 +1,974 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Identity Models ─────────────────────────────────────────────────────────
+
+model User {
+  id                 String    @id @default(uuid()) @db.Uuid
+  organization_id    String?   @db.Uuid
+  username           String    @unique @db.VarChar(255)
+  display_name       String    @db.VarChar(255)
+  email              String?   @db.VarChar(255)
+  phone              String?   @db.VarChar(50)
+  password_hash      String    @db.VarChar(255)
+  is_active          Boolean   @default(true)
+  is_locked          Boolean   @default(false)
+  failed_login_count Int       @default(0)
+  language           String    @default("en") @db.VarChar(10)
+  last_login_at      DateTime? @db.Timestamptz
+  created_at         DateTime  @default(now()) @db.Timestamptz
+  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  roles            UserRole[]
+  sessions         Session[]
+  password_history PasswordHistory[]
+
+  goods_receipts    GoodsReceipt[]
+  vouchers          Voucher[]
+  reversed_vouchers Voucher[]         @relation("VoucherReversedBy")
+  purchase_invoices PurchaseInvoice[]
+  sales_quotations  SalesQuotation[]
+  sales_orders      SalesOrder[]
+  delivery_challans DeliveryChallan[]
+  sales_invoices    SalesInvoice[]
+  sales_returns     SalesReturn[]
+  audit_logs        AuditLog[]
+
+  @@map("users")
+}
+
+model Role {
+  id              String  @id @default(uuid()) @db.Uuid
+  organization_id String? @db.Uuid
+  name            String  @db.VarChar(255)
+  description     String? @db.Text
+  system_role     Boolean @default(false)
+
+  role_permissions RolePermission[]
+  user_roles       UserRole[]
+
+  @@unique([organization_id, name], name: "uix_roles_org_name")
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(uuid()) @db.Uuid
+  code        String  @unique @db.VarChar(255)
+  module      String  @db.VarChar(50)
+  resource    String  @db.VarChar(100)
+  action      String  @db.VarChar(100)
+  description String? @db.Text
+
+  role_permissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  user_id    String  @db.Uuid
+  role_id    String  @db.Uuid
+  company_id String? @db.Uuid
+  branch_id  String? @db.Uuid
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, role_id])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  role_id       String @db.Uuid
+  permission_id String @db.Uuid
+  scope         String @default("ALL_COMPANIES") @db.VarChar(50)
+
+  role       Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@id([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  user_id    String    @db.Uuid
+  device_id  String?   @db.VarChar(255)
+  issued_at  DateTime  @default(now()) @db.Timestamptz
+  expires_at DateTime  @db.Timestamptz
+  revoked_at DateTime? @db.Timestamptz
+  ip_address String?   @db.VarChar(45)
+  user_agent String?   @db.VarChar(512)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model PasswordHistory {
+  id            String   @id @default(uuid()) @db.Uuid
+  user_id       String   @db.Uuid
+  password_hash String   @db.VarChar(255)
+  created_at    DateTime @default(now()) @db.Timestamptz
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("password_history")
+}
+
+// ── Organization Models ─────────────────────────────────────────────────────
+
+model Organization {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String   @db.VarChar(255)
+  legal_name String?  @db.VarChar(255)
+  code       String   @unique @db.VarChar(50)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  companies Company[]
+
+  @@index([code], name: "ix_organizations_code")
+  @@index([is_active], name: "ix_organizations_is_active")
+  @@map("organizations")
+}
+
+model Company {
+  id              String   @id @default(uuid()) @db.Uuid
+  organization_id String   @db.Uuid
+  code            String   @db.VarChar(50)
+  legal_name      String   @db.VarChar(255)
+  trade_name      String?  @db.VarChar(255)
+  address         String?  @db.Text
+  city            String?  @db.VarChar(100)
+  state           String?  @db.VarChar(100)
+  country         String   @default("India") @db.VarChar(100)
+  postal_code     String?  @db.VarChar(20)
+  phone           String?  @db.VarChar(50)
+  email           String?  @db.VarChar(255)
+  gstin           String?  @db.VarChar(15)
+  pan             String?  @db.VarChar(10)
+  timezone        String   @default("Asia/Kolkata") @db.VarChar(50)
+  fy_start_month  Int      @default(4)
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamptz
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organization    Organization    @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  branches        Branch[]
+  financial_years FinancialYear[]
+
+  parties                  Party[]
+  units                    Unit[]
+  tax_classes              TaxClass[]
+  items                    Item[]
+  purchase_orders          PurchaseOrder[]
+  goods_receipts           GoodsReceipt[]
+  purchase_invoices        PurchaseInvoice[]
+  sales_quotations         SalesQuotation[]
+  sales_orders             SalesOrder[]
+  delivery_challans        DeliveryChallan[]
+  sales_invoices           SalesInvoice[]
+  sales_returns            SalesReturn[]
+  stock_movements          StockMovement[]
+  stock_balance_projection StockBalanceProjection[]
+  ledger_accounts          LedgerAccount[]
+  vouchers                 Voucher[]
+  bill_allocations         BillAllocation[]
+  audit_logs               AuditLog[]
+
+  @@unique([organization_id, code], name: "uix_companies_org_code")
+  @@index([organization_id], name: "ix_companies_organization_id")
+  @@index([is_active], name: "ix_companies_is_active")
+  @@map("companies")
+}
+
+model Branch {
+  id          String   @id @default(uuid()) @db.Uuid
+  company_id  String   @db.Uuid
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  address     String?  @db.Text
+  city        String?  @db.VarChar(100)
+  state       String?  @db.VarChar(100)
+  country     String   @default("India") @db.VarChar(100)
+  postal_code String?  @db.VarChar(20)
+  phone       String?  @db.VarChar(50)
+  email       String?  @db.VarChar(255)
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company Company  @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  godowns Godown[]
+
+  purchase_orders          PurchaseOrder[]
+  goods_receipts           GoodsReceipt[]
+  purchase_invoices        PurchaseInvoice[]
+  sales_quotations         SalesQuotation[]
+  sales_orders             SalesOrder[]
+  delivery_challans        DeliveryChallan[]
+  sales_invoices           SalesInvoice[]
+  sales_returns            SalesReturn[]
+  stock_movements          StockMovement[]
+  stock_balance_projection StockBalanceProjection[]
+  ledger_accounts          LedgerAccount[]
+  vouchers                 Voucher[]
+  audit_logs               AuditLog[]
+
+  @@unique([company_id, code], name: "uix_branches_company_code")
+  @@index([company_id], name: "ix_branches_company_id")
+  @@index([is_active], name: "ix_branches_is_active")
+  @@map("branches")
+}
+
+model Godown {
+  id          String   @id @default(uuid()) @db.Uuid
+  branch_id   String   @db.Uuid
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  address     String?  @db.Text
+  description String?  @db.Text
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  branch Branch @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+
+  goods_receipt_lines      GoodsReceiptLine[]
+  purchase_invoice_lines   PurchaseInvoiceLine[]
+  delivery_challan_lines   DeliveryChallanLine[]
+  sales_invoice_lines      SalesInvoiceLine[]
+  sales_return_lines       SalesReturnLine[]
+  stock_movements          StockMovement[]
+  stock_balance_projection StockBalanceProjection[]
+
+  @@unique([branch_id, code], name: "uix_godowns_branch_code")
+  @@index([branch_id], name: "ix_godowns_branch_id")
+  @@index([is_active], name: "ix_godowns_is_active")
+  @@map("godowns")
+}
+
+model FinancialYear {
+  id         String   @id @default(uuid()) @db.Uuid
+  company_id String   @db.Uuid
+  label      String   @db.VarChar(100)
+  start_date DateTime @db.Date
+  end_date   DateTime @db.Date
+  is_active  Boolean  @default(false)
+  is_closed  Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+
+  purchase_invoices PurchaseInvoice[]
+  sales_invoices    SalesInvoice[]
+  sales_returns     SalesReturn[]
+  vouchers          Voucher[]
+
+  @@unique([company_id, label], name: "uix_fy_company_label")
+  @@index([company_id], name: "ix_financial_years_company_id")
+  @@index([is_active], name: "ix_financial_years_is_active")
+  @@map("financial_years")
+}
+
+// ── Master Models ───────────────────────────────────────────────────────────
+
+model Party {
+  id           String   @id @default(uuid()) @db.Uuid
+  company_id   String   @db.Uuid
+  code         String   @db.VarChar(50)
+  party_type   String   @db.VarChar(50) // 'CUSTOMER' or 'SUPPLIER'
+  name         String   @db.VarChar(255)
+  legal_name   String?  @db.VarChar(255)
+  gstin        String?  @db.VarChar(15)
+  pan          String?  @db.VarChar(10)
+  state_code   String?  @db.VarChar(10)
+  credit_days  Int?
+  credit_limit Decimal? @db.Decimal(15, 6)
+  is_blocked   Boolean  @default(false)
+  is_active    Boolean  @default(true)
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+
+  purchase_orders   PurchaseOrder[]
+  goods_receipts    GoodsReceipt[]
+  purchase_invoices PurchaseInvoice[]
+  sales_quotations  SalesQuotation[]
+  sales_orders      SalesOrder[]
+  delivery_challans DeliveryChallan[]
+  sales_invoices    SalesInvoice[]
+  sales_returns     SalesReturn[]
+  ledger_accounts   LedgerAccount[]
+  voucher_lines     VoucherLine[]
+  bill_allocations  BillAllocation[]
+
+  @@index([code])
+  @@index([name])
+  @@index([gstin])
+  @@map("parties")
+}
+
+model Unit {
+  id             String @id @default(uuid()) @db.Uuid
+  company_id     String @db.Uuid
+  code           String @db.VarChar(50)
+  name           String @db.VarChar(255)
+  decimal_places Int    @default(0)
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+
+  items                  Item[]
+  purchase_order_lines   PurchaseOrderLine[]
+  goods_receipt_lines    GoodsReceiptLine[]
+  purchase_invoice_lines PurchaseInvoiceLine[]
+  sales_quotation_lines  SalesQuotationLine[]
+  sales_order_lines      SalesOrderLine[]
+  delivery_challan_lines DeliveryChallanLine[]
+  sales_invoice_lines    SalesInvoiceLine[]
+  sales_return_lines     SalesReturnLine[]
+  stock_movements        StockMovement[]
+
+  @@map("units")
+}
+
+model TaxClass {
+  id         String  @id @default(uuid()) @db.Uuid
+  company_id String  @db.Uuid
+  name       String  @db.VarChar(255)
+  hsn_code   String  @db.VarChar(50)
+  tax_rate   Decimal @db.Decimal(10, 2)
+  cgst_rate  Decimal @db.Decimal(10, 2)
+  sgst_rate  Decimal @db.Decimal(10, 2)
+  igst_rate  Decimal @db.Decimal(10, 2)
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+
+  items Item[]
+
+  @@map("tax_classes")
+}
+
+model Item {
+  id                String  @id @default(uuid()) @db.Uuid
+  company_id        String  @db.Uuid
+  sku               String  @db.VarChar(100)
+  name              String  @db.VarChar(255)
+  item_type         String  @db.VarChar(50) // 'GOODS' or 'SERVICE'
+  primary_unit_id   String  @db.Uuid
+  tax_class_id      String? @db.Uuid
+  purchase_rate     Decimal @default(0) @db.Decimal(15, 6)
+  mrp               Decimal @default(0) @db.Decimal(15, 6)
+  default_sale_rate Decimal @default(0) @db.Decimal(15, 6)
+  is_active         Boolean @default(true)
+
+  company      Company   @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  primary_unit Unit      @relation(fields: [primary_unit_id], references: [id], onDelete: Restrict)
+  tax_class    TaxClass? @relation(fields: [tax_class_id], references: [id], onDelete: SetNull)
+
+  purchase_order_lines     PurchaseOrderLine[]
+  goods_receipt_lines      GoodsReceiptLine[]
+  purchase_invoice_lines   PurchaseInvoiceLine[]
+  sales_quotation_lines    SalesQuotationLine[]
+  sales_order_lines        SalesOrderLine[]
+  delivery_challan_lines   DeliveryChallanLine[]
+  sales_invoice_lines      SalesInvoiceLine[]
+  sales_return_lines       SalesReturnLine[]
+  stock_movements          StockMovement[]
+  stock_balance_projection StockBalanceProjection[]
+
+  @@index([sku])
+  @@index([name])
+  @@map("items")
+}
+
+// ── Purchasing Models ───────────────────────────────────────────────────────
+
+model PurchaseOrder {
+  id                     String    @id @default(uuid()) @db.Uuid
+  company_id             String    @db.Uuid
+  branch_id              String    @db.Uuid
+  party_id               String    @db.Uuid
+  document_number        String    @db.VarChar(100)
+  document_date          DateTime  @db.Date
+  status                 String    @db.VarChar(50) // 'DRAFT', 'CONFIRMED', 'PARTIALLY_RECEIVED', 'FULLY_RECEIVED', 'CLOSED', 'CANCELLED'
+  expected_delivery_date DateTime? @db.Date
+  notes                  String?   @db.Text
+  total                  Decimal   @default(0) @db.Decimal(15, 6)
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party   Party   @relation(fields: [party_id], references: [id], onDelete: Restrict)
+
+  lines          PurchaseOrderLine[]
+  goods_receipts GoodsReceipt[]
+
+  @@index([document_number])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderLine {
+  id                String  @id @default(uuid()) @db.Uuid
+  purchase_order_id String  @db.Uuid
+  item_id           String  @db.Uuid
+  unit_id           String  @db.Uuid
+  ordered_quantity  Decimal @db.Decimal(15, 6)
+  received_quantity Decimal @default(0) @db.Decimal(15, 6)
+  rate              Decimal @db.Decimal(15, 6)
+  discount          Decimal @default(0) @db.Decimal(15, 6)
+  tax               Decimal @default(0) @db.Decimal(15, 6)
+  line_total        Decimal @default(0) @db.Decimal(15, 6)
+
+  purchase_order PurchaseOrder @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
+  item           Item          @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  unit           Unit          @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  goods_receipt_lines    GoodsReceiptLine[]
+  purchase_invoice_lines PurchaseInvoiceLine[]
+
+  @@map("purchase_order_lines")
+}
+
+model GoodsReceipt {
+  id                String    @id @default(uuid()) @db.Uuid
+  company_id        String    @db.Uuid
+  branch_id         String    @db.Uuid
+  party_id          String    @db.Uuid
+  purchase_order_id String?   @db.Uuid
+  document_number   String    @db.VarChar(100)
+  document_date     DateTime  @db.Date
+  status            String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED'
+  posted_at         DateTime? @db.Timestamptz
+  posted_by         String?   @db.Uuid
+
+  company        Company        @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch         @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party          Party          @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  purchase_order PurchaseOrder? @relation(fields: [purchase_order_id], references: [id], onDelete: SetNull)
+  posted_by_user User?          @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines GoodsReceiptLine[]
+
+  @@index([document_number])
+  @@map("goods_receipts")
+}
+
+model GoodsReceiptLine {
+  id                     String    @id @default(uuid()) @db.Uuid
+  goods_receipt_id       String    @db.Uuid
+  purchase_order_line_id String?   @db.Uuid
+  item_id                String    @db.Uuid
+  godown_id              String    @db.Uuid
+  unit_id                String    @db.Uuid
+  received_quantity      Decimal   @db.Decimal(15, 6)
+  batch_number           String?   @db.VarChar(100)
+  expiry_date            DateTime? @db.Date
+
+  goods_receipt       GoodsReceipt       @relation(fields: [goods_receipt_id], references: [id], onDelete: Cascade)
+  purchase_order_line PurchaseOrderLine? @relation(fields: [purchase_order_line_id], references: [id], onDelete: SetNull)
+  item                Item               @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  godown              Godown             @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit                Unit               @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  purchase_invoice_lines PurchaseInvoiceLine[]
+
+  @@map("goods_receipt_lines")
+}
+
+model PurchaseInvoice {
+  id                      String    @id @default(uuid()) @db.Uuid
+  company_id              String    @db.Uuid
+  branch_id               String    @db.Uuid
+  financial_year_id       String    @db.Uuid
+  party_id                String    @db.Uuid
+  supplier_invoice_number String?   @db.VarChar(100)
+  supplier_invoice_date   DateTime? @db.Date
+  document_number         String    @db.VarChar(100)
+  document_date           DateTime  @db.Date
+  status                  String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED'
+  payment_terms_days      Int?
+  due_date                DateTime? @db.Date
+  taxable_amount          Decimal   @default(0) @db.Decimal(15, 6)
+  tax_amount              Decimal   @default(0) @db.Decimal(15, 6)
+  discount_amount         Decimal   @default(0) @db.Decimal(15, 6)
+  grand_total             Decimal   @default(0) @db.Decimal(15, 6)
+  paid_amount             Decimal   @default(0) @db.Decimal(15, 6)
+  outstanding_amount      Decimal   @default(0) @db.Decimal(15, 6)
+  posted_at               DateTime? @db.Timestamptz
+  posted_by               String?   @db.Uuid
+
+  company        Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  financial_year FinancialYear @relation(fields: [financial_year_id], references: [id], onDelete: Restrict)
+  party          Party         @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user User?         @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines PurchaseInvoiceLine[]
+
+  @@index([document_number])
+  @@map("purchase_invoices")
+}
+
+model PurchaseInvoiceLine {
+  id                     String  @id @default(uuid()) @db.Uuid
+  purchase_invoice_id    String  @db.Uuid
+  goods_receipt_line_id  String? @db.Uuid
+  purchase_order_line_id String? @db.Uuid
+  item_id                String  @db.Uuid
+  godown_id              String  @db.Uuid
+  unit_id                String  @db.Uuid
+  quantity               Decimal @db.Decimal(15, 6)
+  rate                   Decimal @db.Decimal(15, 6)
+  discount_amount        Decimal @default(0) @db.Decimal(15, 6)
+  taxable_value          Decimal @default(0) @db.Decimal(15, 6)
+  tax_amount             Decimal @default(0) @db.Decimal(15, 6)
+  line_total             Decimal @default(0) @db.Decimal(15, 6)
+  tax_snapshot_json      String? @db.Text
+
+  purchase_invoice    PurchaseInvoice    @relation(fields: [purchase_invoice_id], references: [id], onDelete: Cascade)
+  goods_receipt_line  GoodsReceiptLine?  @relation(fields: [goods_receipt_line_id], references: [id], onDelete: SetNull)
+  purchase_order_line PurchaseOrderLine? @relation(fields: [purchase_order_line_id], references: [id], onDelete: SetNull)
+  item                Item               @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  godown              Godown             @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit                Unit               @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  @@map("purchase_invoice_lines")
+}
+
+// ── Inventory Models ────────────────────────────────────────────────────────
+
+model StockMovement {
+  id                   String   @id @default(uuid()) @db.Uuid
+  company_id           String   @db.Uuid
+  branch_id            String   @db.Uuid
+  godown_id            String   @db.Uuid
+  item_id              String   @db.Uuid
+  business_date        DateTime @db.Date
+  movement_type        String   @db.VarChar(50) // 'PURCHASE_IN', 'SALE_OUT', etc.
+  quantity_delta       Decimal  @db.Decimal(15, 6)
+  base_quantity_delta  Decimal  @db.Decimal(15, 6)
+  unit_id              String   @db.Uuid
+  source_document_type String   @db.VarChar(100)
+  source_document_id   String   @db.Uuid
+  source_line_id       String?  @db.Uuid
+  cost_rate            Decimal  @default(0) @db.Decimal(15, 6)
+  value_delta          Decimal  @default(0) @db.Decimal(15, 6)
+  created_at           DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  godown  Godown  @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  item    Item    @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  unit    Unit    @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  @@unique([company_id, source_document_type, source_document_id, source_line_id, movement_type], name: "uix_stock_movement_source")
+  @@map("stock_movements")
+}
+
+model StockBalanceProjection {
+  id         String   @id @default(uuid()) @db.Uuid
+  company_id String   @db.Uuid
+  branch_id  String   @db.Uuid
+  godown_id  String   @db.Uuid
+  item_id    String   @db.Uuid
+  quantity   Decimal  @default(0) @db.Decimal(15, 6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  godown  Godown  @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  item    Item    @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  @@map("stock_balance_projection")
+}
+
+// ── Accounting Models ───────────────────────────────────────────────────────
+
+model LedgerAccount {
+  id             String   @id @default(uuid()) @db.Uuid
+  company_id     String   @db.Uuid
+  branch_id      String?  @db.Uuid
+  code           String   @db.VarChar(50)
+  name           String   @db.VarChar(255)
+  account_type   String   @default("ASSET") @db.VarChar(50) // 'ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'
+  normal_balance String   @default("DEBIT") @db.VarChar(10) // 'DEBIT' or 'CREDIT'
+  parent_id      String?  @db.Uuid
+  party_id       String?  @db.Uuid
+  is_system      Boolean  @default(false)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now()) @db.Timestamptz
+  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company Company        @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch?        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party   Party?         @relation(fields: [party_id], references: [id], onDelete: SetNull)
+  parent  LedgerAccount? @relation("AccountHierarchy", fields: [parent_id], references: [id], onDelete: Restrict)
+
+  children      LedgerAccount[] @relation("AccountHierarchy")
+  voucher_lines VoucherLine[]
+
+  @@index([code])
+  @@index([account_type])
+  @@map("ledger_accounts")
+}
+
+model Voucher {
+  id                   String    @id @default(uuid()) @db.Uuid
+  company_id           String    @db.Uuid
+  branch_id            String    @db.Uuid
+  financial_year_id    String    @db.Uuid
+  voucher_type         String    @db.VarChar(50) // 'JOURNAL', 'RECEIPT', 'PAYMENT', 'CONTRA', 'PURCHASE', 'SALES'
+  document_number      String    @db.VarChar(100)
+  voucher_date         DateTime  @db.Date
+  status               String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'REVERSED', 'CANCELLED'
+  source_document_type String?   @db.VarChar(100)
+  source_document_id   String?   @db.Uuid
+  narration            String?   @db.Text
+  posted_at            DateTime? @db.Timestamptz
+  posted_by            String?   @db.Uuid
+  reversed_voucher_id  String?   @unique @db.Uuid
+  reversed_by          String?   @db.Uuid
+  reversed_at          DateTime? @db.Timestamptz
+  reversal_reason      String?   @db.Text
+  created_at           DateTime  @default(now()) @db.Timestamptz
+  updated_at           DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  company          Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch           Branch        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  financial_year   FinancialYear @relation(fields: [financial_year_id], references: [id], onDelete: Restrict)
+  posted_by_user   User?         @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+  reversed_by_user User?         @relation("VoucherReversedBy", fields: [reversed_by], references: [id], onDelete: SetNull)
+
+  reversed_voucher  Voucher? @relation("VoucherReversal", fields: [reversed_voucher_id], references: [id], onDelete: Restrict)
+  reversing_voucher Voucher? @relation("VoucherReversal")
+
+  lines VoucherLine[]
+
+  @@unique([company_id, voucher_type, source_document_type, source_document_id], name: "uix_voucher_source")
+  @@index([source_document_type, source_document_id])
+  @@map("vouchers")
+}
+
+model VoucherLine {
+  id                String  @id @default(uuid()) @db.Uuid
+  voucher_id        String  @db.Uuid
+  ledger_account_id String  @db.Uuid
+  debit             Decimal @default(0) @db.Decimal(15, 6)
+  credit            Decimal @default(0) @db.Decimal(15, 6)
+  party_id          String? @db.Uuid
+  narration         String? @db.Text
+
+  voucher        Voucher       @relation(fields: [voucher_id], references: [id], onDelete: Cascade)
+  ledger_account LedgerAccount @relation(fields: [ledger_account_id], references: [id], onDelete: Restrict)
+  party          Party?        @relation(fields: [party_id], references: [id], onDelete: SetNull)
+
+  bill_allocations BillAllocation[]
+
+  @@map("voucher_lines")
+}
+
+model BillAllocation {
+  id                      String    @id @default(uuid()) @db.Uuid
+  company_id              String    @db.Uuid
+  party_id                String    @db.Uuid
+  voucher_line_id         String    @db.Uuid
+  reference_document_type String    @db.VarChar(100)
+  reference_document_id   String    @db.Uuid
+  allocation_type         String    @db.VarChar(50) // 'NEW_REFERENCE', 'AGAINST_REFERENCE'
+  amount                  Decimal   @db.Decimal(15, 6)
+  due_date                DateTime? @db.Date
+
+  company      Company     @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  party        Party       @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  voucher_line VoucherLine @relation(fields: [voucher_line_id], references: [id], onDelete: Restrict)
+
+  @@map("bill_allocations")
+}
+
+model AuditLog {
+  id                   String   @id @default(uuid()) @db.Uuid
+  company_id           String   @db.Uuid
+  branch_id            String?  @db.Uuid
+  user_id              String   @db.Uuid
+  action               String   @db.VarChar(100)
+  source_document_type String?  @db.VarChar(100)
+  source_document_id   String?  @db.Uuid
+  affected_voucher_id  String?  @db.Uuid
+  details              String?  @db.Text
+  created_at           DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch? @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@index([source_document_type, source_document_id])
+  @@index([company_id, created_at])
+  @@map("audit_logs")
+}
+
+// ── Sales Models ────────────────────────────────────────────────────────────
+
+model SalesQuotation {
+  id              String    @id @default(uuid()) @db.Uuid
+  company_id      String    @db.Uuid
+  branch_id       String    @db.Uuid
+  party_id        String    @db.Uuid
+  document_number String    @db.VarChar(100)
+  document_date   DateTime  @db.Date
+  status          String    @db.VarChar(50) // 'DRAFT', 'SUBMITTED', 'ACCEPTED', 'REJECTED', 'EXPIRED'
+  valid_until     DateTime? @db.Date
+  notes           String?   @db.Text
+  total           Decimal   @default(0) @db.Decimal(15, 6)
+  created_at      DateTime  @default(now()) @db.Timestamptz
+  posted_by       String?   @db.Uuid
+
+  company        Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party          Party   @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user User?   @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines SalesQuotationLine[]
+
+  @@index([document_number])
+  @@map("sales_quotations")
+}
+
+model SalesQuotationLine {
+  id                 String  @id @default(uuid()) @db.Uuid
+  sales_quotation_id String  @db.Uuid
+  item_id            String  @db.Uuid
+  unit_id            String  @db.Uuid
+  quantity           Decimal @db.Decimal(15, 6)
+  rate               Decimal @db.Decimal(15, 6)
+  discount           Decimal @default(0) @db.Decimal(15, 6)
+  tax                Decimal @default(0) @db.Decimal(15, 6)
+  line_total         Decimal @default(0) @db.Decimal(15, 6)
+
+  sales_quotation SalesQuotation @relation(fields: [sales_quotation_id], references: [id], onDelete: Cascade)
+  item            Item           @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  unit            Unit           @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  @@map("sales_quotation_lines")
+}
+
+model SalesOrder {
+  id                     String    @id @default(uuid()) @db.Uuid
+  company_id             String    @db.Uuid
+  branch_id              String    @db.Uuid
+  party_id               String    @db.Uuid
+  document_number        String    @db.VarChar(100)
+  document_date          DateTime  @db.Date
+  status                 String    @db.VarChar(50) // 'DRAFT', 'CONFIRMED', 'PARTIALLY_DELIVERED', 'FULLY_DELIVERED', 'CLOSED', 'CANCELLED'
+  expected_delivery_date DateTime? @db.Date
+  notes                  String?   @db.Text
+  total                  Decimal   @default(0) @db.Decimal(15, 6)
+  created_at             DateTime  @default(now()) @db.Timestamptz
+  posted_by              String?   @db.Uuid
+
+  company        Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party          Party   @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user User?   @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines             SalesOrderLine[]
+  delivery_challans DeliveryChallan[]
+
+  @@index([document_number])
+  @@map("sales_orders")
+}
+
+model SalesOrderLine {
+  id                 String  @id @default(uuid()) @db.Uuid
+  sales_order_id     String  @db.Uuid
+  item_id            String  @db.Uuid
+  unit_id            String  @db.Uuid
+  ordered_quantity   Decimal @db.Decimal(15, 6)
+  delivered_quantity Decimal @default(0) @db.Decimal(15, 6)
+  rate               Decimal @db.Decimal(15, 6)
+  discount           Decimal @default(0) @db.Decimal(15, 6)
+  tax                Decimal @default(0) @db.Decimal(15, 6)
+  line_total         Decimal @default(0) @db.Decimal(15, 6)
+
+  sales_order SalesOrder @relation(fields: [sales_order_id], references: [id], onDelete: Cascade)
+  item        Item       @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  unit        Unit       @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  delivery_challan_lines DeliveryChallanLine[]
+  sales_invoice_lines    SalesInvoiceLine[]
+
+  @@map("sales_order_lines")
+}
+
+model DeliveryChallan {
+  id              String    @id @default(uuid()) @db.Uuid
+  company_id      String    @db.Uuid
+  branch_id       String    @db.Uuid
+  party_id        String    @db.Uuid
+  sales_order_id  String?   @db.Uuid
+  document_number String    @db.VarChar(100)
+  document_date   DateTime  @db.Date
+  status          String    @db.VarChar(50) // 'DRAFT', 'DISPATCHED', 'CANCELLED'
+  posted_at       DateTime? @db.Timestamptz
+  posted_by       String?   @db.Uuid
+  created_at      DateTime  @default(now()) @db.Timestamptz
+
+  company        Company     @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch      @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party          Party       @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  sales_order    SalesOrder? @relation(fields: [sales_order_id], references: [id], onDelete: SetNull)
+  posted_by_user User?       @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines DeliveryChallanLine[]
+
+  @@index([document_number])
+  @@map("delivery_challans")
+}
+
+model DeliveryChallanLine {
+  id                  String    @id @default(uuid()) @db.Uuid
+  delivery_challan_id String    @db.Uuid
+  sales_order_line_id String?   @db.Uuid
+  item_id             String    @db.Uuid
+  godown_id           String    @db.Uuid
+  unit_id             String    @db.Uuid
+  dispatched_quantity Decimal   @db.Decimal(15, 6)
+  batch_number        String?   @db.VarChar(100)
+  expiry_date         DateTime? @db.Date
+
+  delivery_challan DeliveryChallan @relation(fields: [delivery_challan_id], references: [id], onDelete: Cascade)
+  sales_order_line SalesOrderLine? @relation(fields: [sales_order_line_id], references: [id], onDelete: SetNull)
+  item             Item            @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  godown           Godown          @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit             Unit            @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  sales_invoice_lines SalesInvoiceLine[]
+
+  @@map("delivery_challan_lines")
+}
+
+model SalesInvoice {
+  id                 String    @id @default(uuid()) @db.Uuid
+  company_id         String    @db.Uuid
+  branch_id          String    @db.Uuid
+  financial_year_id  String    @db.Uuid
+  party_id           String    @db.Uuid
+  document_number    String    @db.VarChar(100)
+  document_date      DateTime  @db.Date
+  status             String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED'
+  payment_terms_days Int?
+  due_date           DateTime? @db.Date
+  taxable_amount     Decimal   @default(0) @db.Decimal(15, 6)
+  tax_amount         Decimal   @default(0) @db.Decimal(15, 6)
+  discount_amount    Decimal   @default(0) @db.Decimal(15, 6)
+  grand_total        Decimal   @default(0) @db.Decimal(15, 6)
+  paid_amount        Decimal   @default(0) @db.Decimal(15, 6)
+  outstanding_amount Decimal   @default(0) @db.Decimal(15, 6)
+  posted_at          DateTime? @db.Timestamptz
+  posted_by          String?   @db.Uuid
+  created_at         DateTime  @default(now()) @db.Timestamptz
+
+  company        Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  financial_year FinancialYear @relation(fields: [financial_year_id], references: [id], onDelete: Restrict)
+  party          Party         @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user User?         @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines SalesInvoiceLine[]
+
+  @@index([document_number])
+  @@map("sales_invoices")
+}
+
+model SalesInvoiceLine {
+  id                       String  @id @default(uuid()) @db.Uuid
+  sales_invoice_id         String  @db.Uuid
+  delivery_challan_line_id String? @db.Uuid
+  sales_order_line_id      String? @db.Uuid
+  item_id                  String  @db.Uuid
+  godown_id                String  @db.Uuid
+  unit_id                  String  @db.Uuid
+  quantity                 Decimal @db.Decimal(15, 6)
+  rate                     Decimal @db.Decimal(15, 6)
+  discount_amount          Decimal @default(0) @db.Decimal(15, 6)
+  taxable_value            Decimal @default(0) @db.Decimal(15, 6)
+  tax_amount               Decimal @default(0) @db.Decimal(15, 6)
+  line_total               Decimal @default(0) @db.Decimal(15, 6)
+  tax_snapshot_json        String? @db.Text
+
+  sales_invoice         SalesInvoice         @relation(fields: [sales_invoice_id], references: [id], onDelete: Cascade)
+  delivery_challan_line DeliveryChallanLine? @relation(fields: [delivery_challan_line_id], references: [id], onDelete: SetNull)
+  sales_order_line      SalesOrderLine?      @relation(fields: [sales_order_line_id], references: [id], onDelete: SetNull)
+  item                  Item                 @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  godown                Godown               @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit                  Unit                 @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  @@map("sales_invoice_lines")
+}
+
+model SalesReturn {
+  id                  String    @id @default(uuid()) @db.Uuid
+  company_id          String    @db.Uuid
+  branch_id           String    @db.Uuid
+  financial_year_id   String    @db.Uuid
+  party_id            String    @db.Uuid
+  original_invoice_id String?   @db.Uuid
+  document_number     String    @db.VarChar(100)
+  document_date       DateTime  @db.Date
+  status              String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED'
+  taxable_amount      Decimal   @default(0) @db.Decimal(15, 6)
+  tax_amount          Decimal   @default(0) @db.Decimal(15, 6)
+  grand_total         Decimal   @default(0) @db.Decimal(15, 6)
+  posted_at           DateTime? @db.Timestamptz
+  posted_by           String?   @db.Uuid
+  created_at          DateTime  @default(now()) @db.Timestamptz
+
+  company        Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  financial_year FinancialYear @relation(fields: [financial_year_id], references: [id], onDelete: Restrict)
+  party          Party         @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user User?         @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines SalesReturnLine[]
+
+  @@index([document_number])
+  @@map("sales_returns")
+}
+
+model SalesReturnLine {
+  id              String  @id @default(uuid()) @db.Uuid
+  sales_return_id String  @db.Uuid
+  item_id         String  @db.Uuid
+  godown_id       String  @db.Uuid
+  unit_id         String  @db.Uuid
+  quantity        Decimal @db.Decimal(15, 6)
+  rate            Decimal @db.Decimal(15, 6)
+  taxable_value   Decimal @default(0) @db.Decimal(15, 6)
+  tax_amount      Decimal @default(0) @db.Decimal(15, 6)
+  line_total      Decimal @default(0) @db.Decimal(15, 6)
+
+  sales_return SalesReturn @relation(fields: [sales_return_id], references: [id], onDelete: Cascade)
+  item         Item        @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  godown       Godown      @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit         Unit        @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  @@map("sales_return_lines")
+}
+
+model alembic_version {
+  version_num String @id @db.VarChar(32)
+
+  @@ignore
+}
+
+model security_audit_logs {
+  id Int @id @default(autoincrement())
+
+  @@ignore
+}
