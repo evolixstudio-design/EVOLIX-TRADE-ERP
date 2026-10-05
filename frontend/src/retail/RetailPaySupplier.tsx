@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supplierApi } from './retailApi';
+import api from '../shared/api';
+import { AttachmentPicker } from '../shared/components/AttachmentPicker';
 import './retail.css';
 
 export default function RetailPaySupplier() {
@@ -10,22 +12,44 @@ export default function RetailPaySupplier() {
   const [method, setMethod] = useState('CASH');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || Number(amount) <= 0) return;
     try {
       setSaving(true);
-      await supplierApi.paySupplier(id!, {
+      const res = await supplierApi.paySupplier(id!, {
         amount: Number(amount),
         payment_method: method,
         note
       });
-      navigate(`/retail/suppliers/${id}`);
+      
+      const paymentId = (res.data as any).payment_id || (res.data as any).data?.payment_id;
+
+      if (proofFile && paymentId) {
+        try {
+          const formData = new FormData();
+          formData.append('file', proofFile);
+          formData.append('entityType', 'SUPPLIER_PAYMENT');
+          formData.append('entityId', paymentId);
+          formData.append('category', 'SUPPLIER_PAYMENT_PROOF');
+
+          await api.post('/api/v1/attachments', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          navigate(`/retail/suppliers/${id}`);
+        } catch (uploadErr) {
+          console.error(uploadErr);
+          setUploadError('Payment recorded, but proof photo could not be uploaded.');
+          setSaving(false);
+        }
+      } else {
+        navigate(`/retail/suppliers/${id}`);
+      }
     } catch (err) {
       console.error(err);
       alert('Error recording payment');
-    } finally {
       setSaving(false);
     }
   };
@@ -96,6 +120,20 @@ export default function RetailPaySupplier() {
               value={note}
               onChange={e => setNote(e.target.value)}
             />
+          </div>
+
+          <div style={{ marginTop: '24px' }}>
+            <AttachmentPicker 
+              onFileSelect={(f) => {
+                setProofFile(f);
+                setUploadError(null);
+              }}
+            />
+            {uploadError && (
+              <div className="p-2 mt-2 bg-red-50 text-red-600 text-sm rounded border border-red-200">
+                {uploadError}
+              </div>
+            )}
           </div>
 
           <div className="bottom-sticky-bar">

@@ -31,9 +31,6 @@ export class CreateNeedListDto {
   @IsString()
   note?: string;
   
-  @IsOptional()
-  @IsString()
-  photo_attachment_url?: string;
 }
 
 export class UpdateNeedStatusDto {

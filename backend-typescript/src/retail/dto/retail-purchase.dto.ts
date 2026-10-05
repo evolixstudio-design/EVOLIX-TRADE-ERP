@@ -42,9 +42,6 @@ export class CreateRetailPurchaseDto {
   @IsString()
   note?: string;
 
-  @IsOptional()
-  @IsString()
-  photo_attachment_url?: string;
 
   @IsOptional()
   @IsArray()

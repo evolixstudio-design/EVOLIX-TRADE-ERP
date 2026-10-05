@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { purchaseApi, supplierApi, type RetailSupplier } from './retailApi';
+import api from '../shared/api';
+import { AttachmentPicker } from '../shared/components/AttachmentPicker';
 import './retail.css';
 
 export default function RetailAddPurchase() {
@@ -12,6 +14,8 @@ export default function RetailAddPurchase() {
   const [paymentStatus, setPaymentStatus] = useState('CREDIT'); // CREDIT, PAID, PARTIAL
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [saving, setSaving] = useState(false);
+  const [billFile, setBillFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     supplierApi.getSuppliers().then(res => {
@@ -25,18 +29,40 @@ export default function RetailAddPurchase() {
     
     try {
       setSaving(true);
-      await purchaseApi.createPurchase({
+      const purchaseRes = await purchaseApi.createPurchase({
         supplier_id: selectedSupplier,
         total_amount: Number(totalAmount),
         payment_status: paymentStatus,
         paid_amount: paymentStatus === 'PAID' ? Number(totalAmount) : (paymentStatus === 'PARTIAL' ? Number(paidAmount) : 0),
         payment_method: (paymentStatus === 'PAID' || paymentStatus === 'PARTIAL') ? paymentMethod : undefined
       });
-      navigate('/retail/purchases');
+      
+      const purchaseId = purchaseRes.data.data.id;
+
+      if (billFile) {
+        try {
+          const formData = new FormData();
+          formData.append('file', billFile);
+          formData.append('entityType', 'PURCHASE');
+          formData.append('entityId', purchaseId);
+          formData.append('category', 'PURCHASE_BILL');
+
+          await api.post('/api/v1/attachments', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          navigate('/retail/purchases');
+        } catch (uploadErr) {
+          console.error(uploadErr);
+          setUploadError('Purchase saved, but bill photo could not be uploaded.');
+          setSaving(false);
+          // don't navigate, allow user to retry upload
+        }
+      } else {
+        navigate('/retail/purchases');
+      }
     } catch (err) {
       console.error(err);
       alert('Failed to save purchase');
-    } finally {
       setSaving(false);
     }
   };
@@ -112,6 +138,20 @@ export default function RetailAddPurchase() {
 
           <div style={{ marginTop: '32px', textAlign: 'center', color: '#666', fontSize: '0.9em' }}>
             Quick Bill Record does NOT automatically update item-wise stock.
+          </div>
+
+          <div style={{ marginTop: '24px' }}>
+            <AttachmentPicker 
+              onFileSelect={(f) => {
+                setBillFile(f);
+                setUploadError(null);
+              }}
+            />
+            {uploadError && (
+              <div className="p-2 mt-2 bg-red-50 text-red-600 text-sm rounded border border-red-200">
+                {uploadError}
+              </div>
+            )}
           </div>
 
           <div className="bottom-sticky-bar">

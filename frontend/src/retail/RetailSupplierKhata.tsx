@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supplierApi, type RetailKhataTransaction, type RetailSupplier } from './retailApi';
+import { AttachmentPicker } from '../shared/components/AttachmentPicker';
 import './retail.css';
 
 export default function RetailSupplierKhata() {
@@ -10,6 +11,7 @@ export default function RetailSupplierKhata() {
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState<RetailKhataTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedTxnId, setExpandedTxnId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) loadKhata();
@@ -67,20 +69,43 @@ export default function RetailSupplierKhata() {
         ) : (
           <div className="timeline">
             {transactions.map(t => (
-              <div key={t.id} className="timeline-item">
-                <div className="timeline-icon" style={{ backgroundColor: t.type === 'PURCHASE' ? '#fff5f5' : '#f0fdf4', color: t.type === 'PURCHASE' ? '#d9534f' : '#22c55e' }}>
-                  {t.type === 'PURCHASE' ? '🛒' : '💸'}
-                </div>
-                <div className="timeline-details">
-                  <div className="timeline-title">{t.type === 'PURCHASE' ? 'Purchase' : 'Payment'}</div>
-                  <div className="timeline-date">{new Date(t.date).toLocaleDateString()}</div>
-                </div>
-                <div className="timeline-amounts">
-                  <div className="timeline-amount" style={{ color: t.type === 'PURCHASE' ? '#d9534f' : '#22c55e' }}>
-                    {t.type === 'PURCHASE' ? '+' : '-'}₹{t.amount.toFixed(2)}
+              <div key={t.id} className="timeline-item-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                <div 
+                  className="timeline-item" 
+                  style={{ margin: 0, cursor: 'pointer' }}
+                  onClick={() => setExpandedTxnId(expandedTxnId === t.id ? null : t.id)}
+                >
+                  <div className="timeline-icon" style={{ backgroundColor: t.type === 'PURCHASE' ? '#fff5f5' : '#f0fdf4', color: t.type === 'PURCHASE' ? '#d9534f' : '#22c55e' }}>
+                    {t.type === 'PURCHASE' ? '🛒' : '💸'}
                   </div>
-                  <div className="timeline-balance">Bal: ₹{Math.abs(t.balance_after).toFixed(2)}</div>
+                  <div className="timeline-details">
+                    <div className="timeline-title">
+                      {t.type === 'PURCHASE' ? 'Purchase' : 'Payment'}
+                      {t.attachment && <span> 📸</span>}
+                    </div>
+                    <div className="timeline-date">{new Date(t.date).toLocaleDateString()}</div>
+                  </div>
+                  <div className="timeline-amounts">
+                    <div className="timeline-amount" style={{ color: t.type === 'PURCHASE' ? '#d9534f' : '#22c55e' }}>
+                      {t.type === 'PURCHASE' ? '+' : '-'}₹{t.amount.toFixed(2)}
+                    </div>
+                    <div className="timeline-balance">Bal: ₹{Math.abs(t.balance_after).toFixed(2)}</div>
+                  </div>
                 </div>
+                {expandedTxnId === t.id && (
+                  <div style={{ paddingLeft: '48px' }}>
+                    <AttachmentPicker 
+                      existingAttachmentUrl={t.attachment ? `/api/v1/attachments/${t.attachment.id}/content` : undefined}
+                      uploadImmediately={{
+                        entityType: t.type === 'PURCHASE' ? 'PURCHASE' : 'SUPPLIER_PAYMENT',
+                        entityId: t.reference_id || t.id,
+                        category: t.type === 'PURCHASE' ? 'PURCHASE_BILL' : 'SUPPLIER_PAYMENT_PROOF'
+                      }}
+                      onUploadSuccess={() => loadKhata()}
+                      onRemove={() => loadKhata()}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>

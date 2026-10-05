@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { needListApi, type RetailNeed } from './retailApi';
+import api from '../shared/api';
+import { AttachmentPicker } from '../shared/components/AttachmentPicker';
 import './retail.css';
 
 export default function RetailNeeds() {
@@ -14,6 +16,7 @@ export default function RetailNeeds() {
   const [newName, setNewName] = useState('');
   const [newQty, setNewQty] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [needFile, setNeedFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadNeeds();
@@ -36,14 +39,35 @@ export default function RetailNeeds() {
     if (!newName.trim() || newQty <= 0) return;
     try {
       setAdding(true);
-      await needListApi.createNeed({
+      const res = await needListApi.createNeed({
         name: newName,
         quantity: newQty,
         priority: 'NORMAL'
       });
+      
+      const needId = res.data.data.id;
+
+      if (needFile && needId) {
+        try {
+          const formData = new FormData();
+          formData.append('file', needFile);
+          formData.append('entityType', 'NEED');
+          formData.append('entityId', needId);
+          formData.append('category', 'NEED_PHOTO');
+
+          await api.post('/api/v1/attachments', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        } catch (uploadErr) {
+          console.error(uploadErr);
+          // Non-blocking error
+        }
+      }
+
       setShowAdd(false);
       setNewName('');
       setNewQty(1);
+      setNeedFile(null);
       loadNeeds();
     } catch (err) {
       console.error(err);
@@ -148,6 +172,12 @@ export default function RetailNeeds() {
                   className="retail-input" 
                   value={newQty} 
                   onChange={e => setNewQty(Number(e.target.value))} 
+                />
+              </div>
+              <div className="form-group">
+                <label>Photo (Optional)</label>
+                <AttachmentPicker 
+                  onFileSelect={(f) => setNeedFile(f)}
                 />
               </div>
               <button type="submit" className="retail-button primary" disabled={adding || !newName}>

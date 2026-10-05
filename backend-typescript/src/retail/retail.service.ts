@@ -373,14 +373,23 @@ export class RetailService {
       date: b.due_date || new Date(),
       amount: Math.abs(Number(b.amount)),
       balance_after: 0,
-      reference: b.reference_document_type
+      reference: b.reference_document_type,
+      reference_id: b.reference_document_id
     }));
+
+    const referenceIds = transactions.map(t => t.reference_id);
+    const attachments = await this.prisma.attachment.findMany({
+      where: { company_id: companyId, entity_id: { in: referenceIds } },
+      select: { entity_id: true, id: true, mime_type: true }
+    });
+    const attachmentMap = new Map(attachments.map(a => [a.entity_id, a]));
 
     let runningBalance = 0;
     for (const t of transactions) {
       if (t.type === 'PURCHASE') runningBalance += t.amount;
       else runningBalance -= t.amount;
       t.balance_after = runningBalance;
+      (t as any).attachment = attachmentMap.get(t.reference_id) || null;
     }
     return { supplier: { id: party.id, name: party.name }, balance: outstanding, transactions };
   }
@@ -441,11 +450,22 @@ export class RetailService {
   // ── PURCHASES ────────────────────────────────────────────────────────
 
   async getPurchases(companyId: string) {
-    return this.prisma.purchaseInvoice.findMany({
+    const purchases = await this.prisma.purchaseInvoice.findMany({
       where: { company_id: companyId },
       include: { party: { select: { id: true, name: true } } },
       orderBy: { document_date: 'desc' }
     });
+
+    const attachments = await this.prisma.attachment.findMany({
+      where: { company_id: companyId, entity_type: 'PURCHASE' },
+      select: { entity_id: true, id: true, mime_type: true }
+    });
+    const attachmentMap = new Map(attachments.map(a => [a.entity_id, a]));
+
+    return purchases.map(p => ({
+      ...p,
+      attachment: attachmentMap.get(p.id) || null
+    }));
   }
 
   async createPurchase(companyId: string, branchId: string, financialYearId: string, userId: string, dto: CreateRetailPurchaseDto) {
@@ -462,7 +482,6 @@ export class RetailService {
           grand_total: dto.total_amount,
           paid_amount: dto.paid_amount || 0,
           outstanding_amount: dto.total_amount - (dto.paid_amount || 0),
-          photo_attachment_url: dto.photo_attachment_url,
           posted_at: new Date(),
           posted_by: userId
         }
@@ -571,11 +590,22 @@ export class RetailService {
   // ── NEED LIST ────────────────────────────────────────────────────────
 
   async getNeeds(companyId: string) {
-    return this.prisma.needList.findMany({
+    const needs = await this.prisma.needList.findMany({
       where: { company_id: companyId },
       include: { customer: { select: { name: true } }, preferred_supplier: { select: { name: true } } },
       orderBy: { created_at: 'desc' }
     });
+    
+    const attachments = await this.prisma.attachment.findMany({
+      where: { company_id: companyId, entity_type: 'NEED' },
+      select: { entity_id: true, id: true, mime_type: true }
+    });
+    const attachmentMap = new Map(attachments.map(a => [a.entity_id, a]));
+
+    return needs.map(n => ({
+      ...n,
+      attachment: attachmentMap.get(n.id) || null
+    }));
   }
 
   async createNeed(companyId: string, branchId: string, userId: string, dto: CreateNeedListDto) {
@@ -593,7 +623,6 @@ export class RetailService {
         needed_by: dto.needed_by ? new Date(dto.needed_by) : null,
         priority: dto.priority || 'NORMAL',
         note: dto.note,
-        photo_attachment_url: dto.photo_attachment_url,
         created_by: userId,
       }
     });

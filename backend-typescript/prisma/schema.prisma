@@ -51,6 +51,8 @@ model User {
   settled_claims           Claim[]           @relation("ClaimSettler")
   claim_events             ClaimEvent[]
   need_lists               NeedList[]
+  Attachment               Attachment[]
+  Expense                  Expense[]
 
   @@map("users")
 }
@@ -338,6 +340,9 @@ model Organization {
   owner_invitations   OwnerInvitation[]
   tenant_entitlements TenantEntitlement[]
   need_lists          NeedList[]
+  Attachment          Attachment[]
+  ExpenseCategory     ExpenseCategory[]
+  Expense             Expense[]
 
   @@index([code], name: "ix_organizations_code")
   @@index([is_active], name: "ix_organizations_is_active")
@@ -408,6 +413,9 @@ model Company {
   Cheque                   Cheque[]
   BankReconciliation       BankReconciliation[]
   need_lists               NeedList[]
+  Attachment               Attachment[]
+  ExpenseCategory          ExpenseCategory[]
+  Expense                  Expense[]
 
   @@unique([organization_id, code], name: "uix_companies_org_code")
   @@index([organization_id], name: "ix_companies_organization_id")
@@ -479,6 +487,8 @@ model Branch {
   BankAccount              BankAccount[]
   Cheque                   Cheque[]
   need_lists               NeedList[]
+  Attachment               Attachment[]
+  Expense                  Expense[]
 
   @@unique([company_id, code], name: "uix_branches_company_code")
   @@index([company_id], name: "ix_branches_company_id")
@@ -836,7 +846,6 @@ model PurchaseInvoice {
   paid_amount             Decimal   @default(0) @db.Decimal(15, 6)
   outstanding_amount      Decimal   @default(0) @db.Decimal(15, 6)
   replaced_return_id      String?   @db.Uuid
-  photo_attachment_url    String?   @db.VarChar(1024)
   posted_at               DateTime? @db.Timestamptz
   posted_by               String?   @db.Uuid
 
@@ -1007,9 +1016,10 @@ model LedgerAccount {
   children      LedgerAccount[] @relation("AccountHierarchy")
   voucher_lines VoucherLine[]
 
-  config_cash CompanyConfiguration[] @relation("ConfigCashLedger")
-  config_bank CompanyConfiguration[] @relation("ConfigBankLedger")
-  BankAccount BankAccount?
+  config_cash     CompanyConfiguration[] @relation("ConfigCashLedger")
+  config_bank     CompanyConfiguration[] @relation("ConfigBankLedger")
+  BankAccount     BankAccount?
+  ExpenseCategory ExpenseCategory[]
 
   @@index([code])
   @@index([account_type])
@@ -1034,7 +1044,6 @@ model Voucher {
   reversed_by          String?   @db.Uuid
   reversed_at          DateTime? @db.Timestamptz
   reversal_reason      String?   @db.Text
-  photo_attachment_url String?   @db.VarChar(1024)
   created_at           DateTime  @default(now()) @db.Timestamptz
   updated_at           DateTime  @default(now()) @updatedAt @db.Timestamptz
 
@@ -2010,7 +2019,6 @@ model NeedList {
   source                String    @default("SHOP") @db.VarChar(50)
   status                String    @default("NEED") @db.VarChar(50) // 'NEED', 'ORDERED', 'RECEIVED', 'CANCELLED'
   note                  String?   @db.Text
-  photo_attachment_url  String?   @db.VarChar(1024)
   created_by            String?   @db.Uuid
   created_at            DateTime  @default(now()) @db.Timestamptz
   updated_at            DateTime  @default(now()) @updatedAt @db.Timestamptz
@@ -2024,4 +2032,94 @@ model NeedList {
 
   @@index([company_id, status])
   @@map("need_lists")
+}
+
+model Attachment {
+  id              String  @id @default(uuid()) @db.Uuid
+  organization_id String  @db.Uuid
+  company_id      String  @db.Uuid
+  branch_id       String? @db.Uuid
+
+  entity_type String @db.VarChar(100)
+  entity_id   String @db.Uuid
+  category    String @db.VarChar(100)
+
+  original_file_name String @db.VarChar(255)
+  stored_file_name   String @db.VarChar(255)
+  mime_type          String @db.VarChar(100)
+  file_size          Int
+
+  storage_provider String @db.VarChar(50)
+  storage_key      String @db.VarChar(500)
+
+  created_by String?  @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  company      Company      @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch       Branch?      @relation(fields: [branch_id], references: [id], onDelete: SetNull)
+  user         User?        @relation(fields: [created_by], references: [id], onDelete: SetNull)
+
+  @@index([company_id, entity_type, entity_id])
+  @@map("attachments")
+}
+
+// -- Retail Expense Models ----------------------------------------------------------
+
+model ExpenseCategory {
+  id              String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  company_id      String @db.Uuid
+
+  name      String  @db.VarChar(255)
+  icon      String? @db.VarChar(50)
+  is_active Boolean @default(true)
+  ledger_id String? @db.Uuid
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organization   Organization   @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  company        Company        @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  ledger_account LedgerAccount? @relation(fields: [ledger_id], references: [id], onDelete: SetNull)
+
+  expenses Expense[]
+
+  @@unique([company_id, name])
+  @@map("expense_categories")
+}
+
+model Expense {
+  id              String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  company_id      String @db.Uuid
+  branch_id       String @db.Uuid
+
+  type        String  @db.VarChar(50) // 'BUSINESS_EXPENSE', 'OWNER_WITHDRAWAL'
+  category_id String? @db.Uuid
+
+  amount         Decimal  @db.Decimal(15, 6)
+  payment_method String   @db.VarChar(50) // 'CASH', 'UPI', 'BANK', 'CARD'
+  date           DateTime @db.Date
+
+  paid_to     String? @db.VarChar(255)
+  bill_number String? @db.VarChar(100)
+  note        String? @db.Text
+
+  status     String  @default("POSTED") @db.VarChar(50) // 'POSTED', 'CANCELLED'
+  voucher_id String? @unique @db.Uuid
+
+  created_by String?  @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organization Organization     @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  company      Company          @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch       Branch           @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  category     ExpenseCategory? @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  user         User?            @relation(fields: [created_by], references: [id], onDelete: SetNull)
+
+  @@index([company_id, branch_id, date])
+  @@map("expenses")
 }

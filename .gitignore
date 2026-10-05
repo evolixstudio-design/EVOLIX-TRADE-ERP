@@ -77,3 +77,6 @@ coverage/
 scratch/
 archive/
 
+# Storage/Uploads
+storage/
+uploads/

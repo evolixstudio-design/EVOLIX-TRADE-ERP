@@ -21,6 +21,7 @@ import { ClaimsModule } from './claims/claims.module';
 import { BarcodeModule } from './barcode/barcode.module';
 import { PricingModule } from './pricing/pricing.module';
 import { RetailModule } from './retail/retail.module';
+import { AttachmentsModule } from './attachments/attachments.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { RetailModule } from './retail/retail.module';
     PricingModule,
     RetailModule,
     SalesModule,
+    AttachmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

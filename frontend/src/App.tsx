@@ -52,6 +52,8 @@ import RetailSupplierKhata from './retail/RetailSupplierKhata';
 import RetailPaySupplier from './retail/RetailPaySupplier';
 import RetailPurchases from './retail/RetailPurchases';
 import RetailAddPurchase from './retail/RetailAddPurchase';
+import RetailExpenses from './retail/RetailExpenses';
+import RetailAddExpense from './retail/RetailAddExpense';
 
 /**
  * Route guard: requires authentication.
@@ -145,6 +147,10 @@ function App() {
           <Route path="suppliers/:id/pay" element={<RetailPaySupplier />} />
           <Route path="purchases" element={<RetailPurchases />} />
           <Route path="purchases/new" element={<RetailAddPurchase />} />
+          
+          {/* Phase 3 Routes */}
+          <Route path="expenses" element={<RetailExpenses />} />
+          <Route path="expenses/add" element={<RetailAddExpense />} />
           
           {/* Fallbacks for missing feature pages */}
           <Route path="more/*" element={

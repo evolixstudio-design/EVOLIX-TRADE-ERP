@@ -43,6 +43,8 @@ export interface RetailKhataTransaction {
   amount: number;
   balance_after: number;
   reference: string;
+  reference_id?: string;
+  attachment?: { id: string } | null;
 }
 
 export interface RetailSupplier {
@@ -61,6 +63,7 @@ export interface RetailPurchase {
   outstanding_amount: number;
   party: { id: string; name: string };
   status: string;
+  attachment?: { id: string } | null;
 }
 
 export interface RetailNeed {
@@ -71,6 +74,7 @@ export interface RetailNeed {
   status: string;
   customer?: { name: string };
   preferred_supplier?: { name: string };
+  attachment?: { id: string } | null;
 }
 
 /**
@@ -220,5 +224,34 @@ export const dashboardApi = {
   getDashboard: async () => {
     // Maps to: GET /api/v1/retail/home
     return api.get('/retail/home');
+  }
+};
+
+/**
+ * -- EXPENSES (PHASE 3) -------------------------------------------
+ */
+export const expenseApi = {
+  getExpenses: async (params?: any) => {
+    return api.get('/retail/expenses', { params });
+  },
+
+  getSummary: async () => {
+    return api.get('/retail/expenses/summary');
+  },
+
+  createExpense: async (payload: any) => {
+    return api.post('/retail/expenses', payload);
+  },
+
+  cancelExpense: async (id: string) => {
+    return api.delete(`/retail/expenses/${id}`);
+  },
+
+  getCategories: async () => {
+    return api.get('/retail/expense-categories');
+  },
+
+  createCategory: async (payload: { name: string; icon?: string }) => {
+    return api.post('/retail/expense-categories', payload);
   }
 };
