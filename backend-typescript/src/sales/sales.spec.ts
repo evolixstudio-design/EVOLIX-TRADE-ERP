@@ -3,6 +3,7 @@ import { SalesPostingService } from './posting.service';
 import { SalesService } from './sales.service';
 import { PrismaService } from '../database/prisma.service';
 import { InventoryPostingService } from '../inventory/posting.service';
+import { getIntents } from '../intelligence/intent-handlers';
 
 import { ConfigModule } from '@nestjs/config';
 import { SalesModule } from './sales.module';
@@ -130,6 +131,7 @@ describe('Sales Module - End to End Business Logic', () => {
     const cIds = [companyId, company2Id].filter(Boolean);
     if (cIds.length === 0) return;
 
+    await prisma.pricingTrace.deleteMany({ where: { company_id: { in: cIds } } });
     await prisma.auditLog.deleteMany({ where: { company_id: { in: cIds } } });
     await prisma.billAllocation.deleteMany({ where: { company_id: { in: cIds } } });
     await prisma.voucherLine.deleteMany({ where: { voucher: { company_id: { in: cIds } } } });
@@ -188,6 +190,8 @@ describe('Sales Module - End to End Business Logic', () => {
     });
     expect(order.status).toBe('DRAFT');
     
+    await salesService.confirmSalesOrder(companyId, order.id, userId);
+
     // 2. Challan
     const challan = await salesService.createDeliveryChallan(companyId, {
       branch_id: branchId, party_id: partyId, document_number: 'DC-001', document_date: new Date().toISOString(),
@@ -335,6 +339,7 @@ describe('Sales Module - End to End Business Logic', () => {
       branch_id: branchId, party_id: partyId, document_number: 'SO-OD-001', document_date: new Date().toISOString(),
       lines: [{ item_id: itemId, unit_id: unitId, ordered_quantity: 30, rate: 100 }]
     });
+    await salesService.confirmSalesOrder(companyId, order.id, userId);
 
     // Delivery 1 = 20
     const dc1 = await salesService.createDeliveryChallan(companyId, {
@@ -352,28 +357,31 @@ describe('Sales Module - End to End Business Logic', () => {
     });
     await postingService.postDeliveryChallan(companyId, dc2.id, userId);
 
-    // Delivery 3 = 1
-    const dc3 = await salesService.createDeliveryChallan(companyId, {
-      branch_id: branchId, party_id: partyId, document_number: 'DC-OD-003', document_date: new Date().toISOString(),
-      sales_order_id: order.id,
-      lines: [{ item_id: itemId, godown_id: godownId, unit_id: unitId, dispatched_quantity: 1, sales_order_line_id: order.lines[0].id }]
-    });
-
+    // Delivery 3 = 1 (should fail either in creation or posting)
     let errorCaught = false;
+    let dc3Id = '';
     try {
+      const dc3 = await salesService.createDeliveryChallan(companyId, {
+        branch_id: branchId, party_id: partyId, document_number: 'DC-OD-003', document_date: new Date().toISOString(),
+        sales_order_id: order.id,
+        lines: [{ item_id: itemId, godown_id: godownId, unit_id: unitId, dispatched_quantity: 1, sales_order_line_id: order.lines[0].id }]
+      });
+      dc3Id = dc3.id;
       await postingService.postDeliveryChallan(companyId, dc3.id, userId);
     } catch (e: any) {
       errorCaught = true;
-      expect(e.message).toMatch(/cannot exceed ordered quantity/i);
+      expect(e.message).toMatch(/order in status FULLY_DELIVERED|Cannot exceed ordered quantity/i);
     }
     expect(errorCaught).toBe(true);
 
     // Verify consistency
-    const stockMovements = await prisma.stockMovement.findMany({ where: { source_document_id: dc3.id } });
-    expect(stockMovements.length).toBe(0);
+    if (dc3Id) {
+      const stockMovements = await prisma.stockMovement.findMany({ where: { source_document_id: dc3Id } });
+      expect(stockMovements.length).toBe(0);
 
-    const checkDc3 = await prisma.deliveryChallan.findUnique({ where: { id: dc3.id } });
-    expect(checkDc3?.status).toBe('DRAFT');
+      const checkDc3 = await prisma.deliveryChallan.findUnique({ where: { id: dc3Id } });
+      expect(checkDc3?.status).toBe('DRAFT');
+    }
   });
 
   it('should prove complete posting chain and data lineage', async () => {
@@ -441,6 +449,110 @@ describe('Sales Module - End to End Business Logic', () => {
 
     const vouchers = await prisma.voucher.findMany({ where: { source_document_id: invoice.id } });
     expect(vouchers.length).toBe(1);
+  });
+
+  it('should prove AUTHORITATIVE CUSTOMER OUTSTANDING == INTELLIGENCE CUSTOMER OUTSTANDING', async () => {
+    // 1. Authoritative Truth (Accounting / Bill Allocation)
+    const allocations = await prisma.billAllocation.findMany({
+      where: { company_id: companyId, party: { party_type: 'CUSTOMER' } }
+    });
+    let authTotal = 0;
+    for (const a of allocations) {
+      authTotal += Number(a.amount) * (a.allocation_type === 'NEW_REFERENCE' ? 1 : -1);
+    }
+
+    // 2. Intelligence Truth
+    const intents = getIntents(prisma);
+    const outstandingIntent = intents.find((i: any) => i.intentCode === 'CUSTOMER_OUTSTANDING');
+    const result = await outstandingIntent.handle({ organizationId: companyId, branchId: branchId, userId: userId });
+    
+    expect(result.success).toBe(true);
+    // Since some tests might result in 0 or positive, we filter out zeroes in Intelligence
+    // If authTotal is > 0, it should exactly match. If it's <= 0, Intelligence reports 0.
+    const expectedValue = authTotal > 0 ? authTotal : 0;
+    expect(Number(result.answer.value)).toBe(expectedValue);
+  });
+
+  it('should prove BillAllocation-derived customer outstanding == exposed SalesInvoice projection', async () => {
+    // 1. Credit Invoice
+    const invoice = await salesService.createSalesInvoice(companyId, {
+      branch_id: branchId, party_id: partyId, financial_year_id: finYearId,
+      document_number: 'INV-PROJ-001', document_date: new Date().toISOString(),
+      lines: [{ item_id: itemId, godown_id: godownId, unit_id: unitId, quantity: 1, rate: 1000 }] // Total 1000
+    });
+    await postingService.postSalesInvoice(companyId, invoice.id, userId);
+
+    let projInvoice = await salesService.getSalesInvoice(companyId, invoice.id);
+    expect(Number((projInvoice as any).outstanding_amount)).toBe(1000);
+    expect(Number((projInvoice as any).paid_amount)).toBe(0);
+
+    const vLine = await prisma.voucherLine.findFirst({ where: { voucher: { source_document_id: invoice.id } } });
+    if (!vLine) throw new Error('Voucher line not found');
+
+    // 2. Partial Payment Simulation
+    await prisma.billAllocation.create({
+      data: {
+        company_id: companyId,
+        party_id: partyId,
+        voucher_line_id: vLine.id, // Using the real voucher line
+        reference_document_type: 'SALES_INVOICE',
+        reference_document_id: invoice.id,
+        allocation_type: 'AGAINST_REFERENCE',
+        amount: 300,
+        due_date: new Date()
+      }
+    });
+
+    projInvoice = await salesService.getSalesInvoice(companyId, invoice.id);
+    expect(Number((projInvoice as any).outstanding_amount)).toBe(700);
+    expect(Number((projInvoice as any).paid_amount)).toBe(300);
+
+    // 3. Full Payment Simulation
+    await prisma.billAllocation.create({
+      data: {
+        company_id: companyId,
+        party_id: partyId,
+        voucher_line_id: vLine.id,
+        reference_document_type: 'SALES_INVOICE',
+        reference_document_id: invoice.id,
+        allocation_type: 'AGAINST_REFERENCE',
+        amount: 700,
+        due_date: new Date()
+      }
+    });
+
+    projInvoice = await salesService.getSalesInvoice(companyId, invoice.id);
+    expect(Number((projInvoice as any).outstanding_amount)).toBe(0);
+    expect(Number((projInvoice as any).paid_amount)).toBe(1000);
+
+    // 4. Sales Return 
+    const ret = await salesService.createSalesReturn(companyId, {
+      branch_id: branchId, party_id: partyId, financial_year_id: finYearId,
+      document_number: 'RET-PROJ-001', document_date: new Date().toISOString(),
+      original_invoice_id: invoice.id,
+      lines: [{ item_id: itemId, godown_id: godownId, unit_id: unitId, quantity: 1, rate: 1000 }]
+    });
+    await postingService.postSalesReturn(companyId, ret.id, userId);
+
+    // Sales return posts an AGAINST_REFERENCE to the original invoice
+    projInvoice = await salesService.getSalesInvoice(companyId, invoice.id);
+    expect(Number((projInvoice as any).outstanding_amount)).toBe(-1000); // 0 balance minus 1000 return 
+
+    // 5. Invoice Reversal Simulation
+    const invoice2 = await salesService.createSalesInvoice(companyId, {
+      branch_id: branchId, party_id: partyId, financial_year_id: finYearId,
+      document_number: 'INV-PROJ-002', document_date: new Date().toISOString(),
+      lines: [{ item_id: itemId, godown_id: godownId, unit_id: unitId, quantity: 1, rate: 500 }]
+    });
+    await postingService.postSalesInvoice(companyId, invoice2.id, userId);
+    
+    let projInvoice2 = await salesService.getSalesInvoice(companyId, invoice2.id);
+    expect(Number((projInvoice2 as any).outstanding_amount)).toBe(500);
+
+    await postingService.reverseSalesInvoice(companyId, invoice2.id, userId);
+    
+    projInvoice2 = await salesService.getSalesInvoice(companyId, invoice2.id);
+    expect(Number((projInvoice2 as any).outstanding_amount)).toBe(0);
   });
 });
 

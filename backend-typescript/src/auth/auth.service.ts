@@ -131,6 +131,18 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    const userWithRoles = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        roles: {
+          include: { role: { include: { role_permissions: { include: { permission: true } } } } }
+        }
+      }
+    });
+
+    const activeRole = userWithRoles?.roles[0]?.role;
+    const permissions = activeRole?.role_permissions.map(rp => rp.permission.code) || [];
+
     const payload = { sub: user.id, username: user.username };
     return {
       access_token: await this.jwtService.signAsync(payload),
@@ -138,6 +150,8 @@ export class AuthService implements OnModuleInit {
         id: user.id,
         username: user.username,
         name: user.display_name,
+        role: activeRole?.name || 'USER',
+        permissions: permissions
       }
     };
   }

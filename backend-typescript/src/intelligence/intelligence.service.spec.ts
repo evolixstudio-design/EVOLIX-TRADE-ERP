@@ -19,6 +19,10 @@ describe('IntelligenceService', () => {
             purchaseOrderLine: { findMany: vi.fn().mockResolvedValue([]) },
             purchaseInvoice: { findMany: vi.fn().mockResolvedValue([]) },
             goodsReceipt: { findMany: vi.fn().mockResolvedValue([]) },
+            salesInvoice: { findMany: vi.fn().mockResolvedValue([]) },
+            salesOrder: { findMany: vi.fn().mockResolvedValue([]) },
+            salesReturn: { findMany: vi.fn().mockResolvedValue([]) },
+            billAllocation: { findMany: vi.fn().mockResolvedValue([]) },
             user: { findUnique: vi.fn().mockResolvedValue(null) }
           },
         },
@@ -38,11 +42,10 @@ describe('IntelligenceService', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should return NOT_IMPLEMENTABLE_YET for sales today', async () => {
+  it('should successfully return SALES_TODAY', async () => {
     const result = await service.ask({ question: 'What are sales today?' }, { organizationId: 'test-org', userId: 'admin-1' });
     expect(result.intent).toBe('SALES_TODAY');
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('NOT_IMPLEMENTABLE_YET');
+    expect(result.success).toBe(true);
   });
 
   it('should return UNKNOWN for arbitrary text', async () => {

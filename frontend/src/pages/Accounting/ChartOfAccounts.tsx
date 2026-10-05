@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import api from '../../api';
+import api from '../../shared/api';
 import { Book, Plus, RefreshCw } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export default function ChartOfAccounts() {
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -86,3 +86,4 @@ export default function ChartOfAccounts() {
     </div>
   );
 }
+

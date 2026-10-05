@@ -15,6 +15,12 @@ import { IntelligenceModule } from './intelligence/intelligence.module';
 import { AccountingModule } from './accounting/accounting.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { SalesModule } from './sales/sales.module';
+import { PlatformModule } from './platform/platform.module';
+import { PosModule } from './pos/pos.module';
+import { ClaimsModule } from './claims/claims.module';
+import { BarcodeModule } from './barcode/barcode.module';
+import { PricingModule } from './pricing/pricing.module';
+import { RetailModule } from './retail/retail.module';
 
 @Module({
   imports: [
@@ -24,12 +30,13 @@ import { SalesModule } from './sales/sales.module';
     }),
     PrismaModule,
     HealthModule,
-    PurchaseModule,
-    IntelligenceModule,
     AccountingModule,
     InventoryModule,
-    SalesModule,
     AuthModule,
+    PlatformModule,
+    PosModule,
+    PricingModule,
+    RetailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

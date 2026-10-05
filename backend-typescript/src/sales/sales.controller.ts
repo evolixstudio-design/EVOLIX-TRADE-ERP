@@ -5,15 +5,23 @@ import { CreateSalesInvoiceDto } from './dto/create-sales-invoice.dto';
 import { CreateSalesOrderDto } from './dto/create-sales-order.dto';
 import { CreateDeliveryChallanDto } from './dto/create-delivery-challan.dto';
 import { CreateSalesReturnDto } from './dto/create-sales-return.dto';
-import { AuthGuard, RequirePermissions } from '../common/guards/auth.guard';
+import { CreateSalesQuotationDto } from './dto/create-sales-quotation.dto';
+import { SalesConversionService } from './conversion.service';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { SubscriptionGuard } from '../common/guards/subscription.guard';
+import { FeatureGuard, RequireFeature } from '../common/guards/feature.guard';
+import { PermissionGuard } from '../common/guards/permission.guard';
+import { RequirePermissions } from '../common/guards/auth.guard';
 import { PrismaService } from '../database/prisma.service';
 
 @Controller('api/v1/sales')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, SubscriptionGuard, FeatureGuard, PermissionGuard)
+@RequireFeature('SALES')
 export class SalesController {
   constructor(
     private readonly salesService: SalesService,
     private readonly postingService: SalesPostingService,
+    private readonly conversionService: SalesConversionService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -46,6 +54,38 @@ export class SalesController {
     };
   }
 
+  // --- Sales Quotation ---
+
+  @Post('quotations')
+  @RequirePermissions('sales.create')
+  async createQuotation(@Request() req: any, @Body() dto: CreateSalesQuotationDto) {
+    return this.salesService.createSalesQuotation(req.user.company_id, dto);
+  }
+
+  @Get('quotations')
+  @RequirePermissions('sales.read')
+  async getQuotations(@Request() req: any) {
+    return this.prisma.salesQuotation.findMany({ where: { company_id: req.user.company_id } });
+  }
+
+  @Get('quotations/:id')
+  @RequirePermissions('sales.read')
+  async getQuotation(@Request() req: any, @Param('id') id: string) {
+    return this.salesService.getSalesQuotation(req.user.company_id, id);
+  }
+
+  @Post('quotations/:id/status')
+  @RequirePermissions('sales.post')
+  async updateQuotationStatus(@Request() req: any, @Param('id') id: string, @Body('status') status: string) {
+    return this.salesService.updateQuotationStatus(req.user.company_id, id, status, req.user.id);
+  }
+
+  @Post('quotations/:id/convert')
+  @RequirePermissions('sales.create')
+  async convertQuotation(@Request() req: any, @Param('id') id: string, @Body() conversionData: any) {
+    return this.conversionService.convertQuotationToSalesOrder(req.user.company_id, id, req.user.id, conversionData);
+  }
+
   // --- Sales Order ---
 
   @Post('orders')
@@ -64,6 +104,18 @@ export class SalesController {
   @RequirePermissions('sales.read')
   async getOrder(@Request() req: any, @Param('id') id: string) {
     return this.salesService.getSalesOrder(req.user.company_id, id);
+  }
+
+  @Post('orders/:id/confirm')
+  @RequirePermissions('sales.post')
+  async confirmOrder(@Request() req: any, @Param('id') id: string) {
+    return this.salesService.confirmSalesOrder(req.user.company_id, id, req.user.id);
+  }
+
+  @Post('orders/:id/convert')
+  @RequirePermissions('sales.create')
+  async convertOrder(@Request() req: any, @Param('id') id: string, @Body() conversionData: any) {
+    return this.conversionService.convertSalesOrderToDeliveryChallan(req.user.company_id, id, req.user.id, conversionData);
   }
 
   // --- Delivery Challan ---
@@ -90,6 +142,12 @@ export class SalesController {
   @RequirePermissions('sales.post')
   async postChallan(@Request() req: any, @Param('id') id: string) {
     return this.postingService.postDeliveryChallan(req.user.company_id, id, req.user.id);
+  }
+
+  @Post('challans/:id/convert')
+  @RequirePermissions('sales.create')
+  async convertChallan(@Request() req: any, @Param('id') id: string, @Body() conversionData: any) {
+    return this.conversionService.convertDeliveryChallanToSalesInvoice(req.user.company_id, id, req.user.id, conversionData);
   }
 
   // --- Sales Invoice ---
@@ -148,5 +206,11 @@ export class SalesController {
   @RequirePermissions('sales.post')
   async postReturn(@Request() req: any, @Param('id') id: string) {
     return this.postingService.postSalesReturn(req.user.company_id, id, req.user.id);
+  }
+
+  @Post('returns/:id/replace')
+  @RequirePermissions('sales.create')
+  async replaceReturn(@Request() req: any, @Param('id') id: string, @Body() dto: any) {
+    return this.salesService.createReplacement(req.user.company_id, id, req.user.id, dto);
   }
 }

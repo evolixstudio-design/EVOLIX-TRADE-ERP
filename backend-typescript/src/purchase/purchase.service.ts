@@ -188,4 +188,203 @@ export class PurchaseService {
       recentPurchases,
     };
   }
+
+  // ── Purchase Returns ───────────────────────────────────────────────────────
+
+  async createPurchaseReturn(companyId: string, dto: any) {
+    if (dto.branch_id) {
+      const branch = await this.prisma.branch.findUnique({ where: { id: dto.branch_id } });
+      if (!branch || branch.company_id !== companyId) throw new BadRequestException('Branch does not belong to the company');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      let invoice: any = null;
+      if (dto.original_invoice_id) {
+        invoice = await tx.purchaseInvoice.findUnique({
+          where: { id: dto.original_invoice_id },
+          include: { lines: true }
+        });
+        if (!invoice || invoice.company_id !== companyId) throw new BadRequestException('Invalid original invoice reference');
+        if (invoice.branch_id !== dto.branch_id) throw new BadRequestException('Cannot return an invoice from a different branch');
+
+        for (const line of dto.lines) {
+          const invoiceLine = invoice.lines.find((l: any) => l.item_id === line.item_id && l.unit_id === line.unit_id);
+          if (!invoiceLine) {
+            throw new BadRequestException(`Item ${line.item_id} not found in the original invoice`);
+          }
+
+          const existingReturns = await tx.purchaseReturnLine.aggregate({
+            where: {
+              item_id: line.item_id,
+              unit_id: line.unit_id,
+              purchase_return: { original_invoice_id: dto.original_invoice_id, status: { not: 'CANCELLED' } }
+            },
+            _sum: { quantity: true }
+          });
+
+          const returnedQty = existingReturns._sum.quantity || new Prisma.Decimal(0);
+          const returningQty = new Prisma.Decimal(line.quantity);
+          const maxAllowed = new Prisma.Decimal(invoiceLine.quantity).sub(returnedQty);
+
+          if (returningQty.gt(maxAllowed)) {
+            throw new BadRequestException(`Cannot return more than purchased quantity. Max allowed for item ${line.item_id} is ${maxAllowed.toString()}`);
+          }
+        }
+      }
+
+      let taxableAmount = new Prisma.Decimal(0);
+      let taxAmount = new Prisma.Decimal(0);
+      let grandTotal = new Prisma.Decimal(0);
+
+      const lines = dto.lines.map((line: any) => {
+        const lineQty = new Prisma.Decimal(line.quantity);
+        let lineRate = new Prisma.Decimal(line.rate);
+        let lineTax = new Prisma.Decimal(0);
+        
+        if (invoice) {
+          const invLine = invoice.lines.find((l: any) => l.item_id === line.item_id && l.unit_id === line.unit_id);
+          if (invLine) {
+            lineRate = new Prisma.Decimal(invLine.rate);
+            if (new Prisma.Decimal(invLine.quantity).gt(0)) {
+              const taxPerUnit = new Prisma.Decimal(invLine.tax_amount).div(invLine.quantity);
+              lineTax = taxPerUnit.mul(lineQty);
+            }
+          }
+        }
+
+        const taxableValue = lineQty.mul(lineRate);
+        const lineTotal = taxableValue.add(lineTax);
+
+        taxableAmount = taxableAmount.add(taxableValue);
+        taxAmount = taxAmount.add(lineTax);
+        grandTotal = grandTotal.add(lineTotal);
+
+        return {
+          item_id: line.item_id,
+          godown_id: line.godown_id,
+          unit_id: line.unit_id,
+          quantity: lineQty,
+          rate: lineRate,
+          taxable_value: taxableValue,
+          tax_amount: lineTax,
+          line_total: lineTotal,
+        };
+      });
+
+      return tx.purchaseReturn.create({
+        data: {
+          company_id: companyId,
+          branch_id: dto.branch_id,
+          party_id: dto.party_id,
+          financial_year_id: dto.financial_year_id,
+          original_invoice_id: dto.original_invoice_id,
+          document_number: dto.document_number,
+          document_date: new Date(dto.document_date),
+          status: 'DRAFT',
+          reason_id: dto.reason_id,
+          notes: dto.notes,
+          taxable_amount: taxableAmount,
+          tax_amount: taxAmount,
+          grand_total: grandTotal,
+          lines: { create: lines }
+        },
+        include: { lines: true }
+      });
+    }, {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable
+    });
+  }
+
+  async getPurchaseReturns(companyId: string) {
+    return this.prisma.purchaseReturn.findMany({
+      where: { company_id: companyId },
+      include: { party: true },
+      orderBy: { document_date: 'desc' },
+    });
+  }
+
+  async getPurchaseReturnById(id: string) {
+    const ret = await this.prisma.purchaseReturn.findUnique({
+      where: { id },
+      include: {
+        party: true,
+        lines: { include: { item: true, unit: true } }
+      }
+    });
+    if (!ret) throw new NotFoundException('Purchase Return not found');
+    return ret;
+  }
+
+  async postPurchaseReturn(id: string, userId: string) {
+    return this.postingService.postPurchaseReturn(id, userId);
+  }
+
+  async createReplacement(companyId: string, returnId: string, userId: string, dto: any) {
+    return this.prisma.$transaction(async (tx) => {
+      const purchaseReturn = await tx.purchaseReturn.findUnique({
+        where: { id: returnId },
+        include: { lines: true }
+      });
+      if (!purchaseReturn || purchaseReturn.company_id !== companyId) throw new NotFoundException('Purchase Return not found');
+      if (purchaseReturn.status !== 'POSTED') throw new BadRequestException('Can only replace a POSTED Purchase Return');
+
+      const lines = [];
+      for (const line of dto.lines) {
+        const returnLine = purchaseReturn.lines.find((l: any) => l.item_id === line.item_id && l.unit_id === line.unit_id);
+        if (!returnLine) throw new BadRequestException(`Item ${line.item_id} not found in the original return`);
+
+        const lineQty = new Prisma.Decimal(line.quantity);
+
+        const existingReplacements = await tx.purchaseInvoiceLine.aggregate({
+          where: {
+            item_id: line.item_id,
+            unit_id: line.unit_id,
+            purchase_invoice: { replaced_return_id: returnId, status: { not: 'CANCELLED' } }
+          },
+          _sum: { quantity: true }
+        });
+
+        const replacedQty = existingReplacements._sum.quantity || new Prisma.Decimal(0);
+        const maxAllowed = new Prisma.Decimal(returnLine.quantity).sub(replacedQty);
+
+        if (lineQty.gt(maxAllowed)) {
+          throw new BadRequestException(`Replacement quantity for item ${line.item_id} exceeds returned quantity`);
+        }
+
+        lines.push({
+          item_id: line.item_id,
+          godown_id: line.godown_id,
+          unit_id: line.unit_id,
+          quantity: lineQty,
+          rate: new Prisma.Decimal(0),
+          taxable_value: new Prisma.Decimal(0),
+          tax_amount: new Prisma.Decimal(0),
+          line_total: new Prisma.Decimal(0),
+        });
+      }
+
+      return tx.purchaseInvoice.create({
+        data: {
+          company_id: companyId,
+          branch_id: dto.branch_id,
+          party_id: purchaseReturn.party_id,
+          financial_year_id: dto.financial_year_id,
+          document_number: dto.document_number,
+          document_date: new Date(dto.document_date),
+          status: 'DRAFT',
+          replaced_return_id: purchaseReturn.id,
+          taxable_amount: 0,
+          tax_amount: 0,
+          discount_amount: 0,
+          grand_total: 0,
+          paid_amount: 0,
+          outstanding_amount: 0,
+          lines: { create: lines }
+        },
+        include: { lines: true }
+      });
+    }, {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable
+    });
+  }
 }

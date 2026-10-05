@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Ban, CheckCircle, Unlock, Key, Trash2, Shield, X, LogOut } from 'lucide-react';
-import api from '../api';
-import { Modal } from '../components/Modal';
+import api from '../shared/api';
+import { Modal } from '../shared/components/Modal';
 
 interface RoleData {
   id: string;
@@ -298,3 +298,4 @@ const Users = () => {
 };
 
 export default Users;
+

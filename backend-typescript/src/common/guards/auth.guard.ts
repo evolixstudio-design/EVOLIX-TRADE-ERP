@@ -101,29 +101,13 @@ export class AuthGuard implements CanActivate {
       id: user.id, 
       username: user.username, 
       role: authorizedRole.role.name, 
+      system_role: authorizedRole.role.system_role,
       name: user.display_name,
+      organization_id: user.organization_id,
       company_id: activeCompanyId,
       branch_id: activeBranchId,
       permissions: Array.from(permissions)
     };
-
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (!requiredPermissions || requiredPermissions.length === 0) {
-      return true; // Logged in, but no specific permissions required
-    }
-
-    const hasPermission = () => {
-      if (request.user.role === 'ADMIN' || authorizedRole.role.system_role) return true;
-      return requiredPermissions.some((perm) => request.user.permissions.includes(perm));
-    };
-
-    if (!hasPermission()) {
-      throw new ForbiddenException('Insufficient permissions');
-    }
 
     return true;
   }

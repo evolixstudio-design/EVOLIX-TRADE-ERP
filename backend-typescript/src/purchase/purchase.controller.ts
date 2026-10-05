@@ -1,12 +1,21 @@
 import { Controller, Get, Post, Body, Param, Query, Patch, UseGuards, Request } from '@nestjs/common';
 import { PurchaseService } from './purchase.service';
+import { PurchaseConversionService } from './conversion.service';
 import { Prisma } from '@prisma/client';
-import { AuthGuard, RequirePermissions } from '../common/guards/auth.guard';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { SubscriptionGuard } from '../common/guards/subscription.guard';
+import { FeatureGuard, RequireFeature } from '../common/guards/feature.guard';
+import { PermissionGuard } from '../common/guards/permission.guard';
+import { RequirePermissions } from '../common/guards/auth.guard';
 
 @Controller('api/v1/purchase')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, SubscriptionGuard, FeatureGuard, PermissionGuard)
+@RequireFeature('PURCHASING')
 export class PurchaseController {
-  constructor(private readonly purchaseService: PurchaseService) {}
+  constructor(
+    private readonly purchaseService: PurchaseService,
+    private readonly conversionService: PurchaseConversionService
+  ) {}
 
   // Dashboard
   @Get('dashboard')
@@ -52,6 +61,12 @@ export class PurchaseController {
   getPurchaseOrderById(@Param('id') id: string) {
     // Note: ensure Service methods also validate company_id internally
     return this.purchaseService.getPurchaseOrderById(id);
+  }
+
+  @Post('orders/:id/convert')
+  @RequirePermissions('purchase.create')
+  convertPurchaseOrder(@Request() req: any, @Param('id') id: string, @Body() conversionData: any) {
+    return this.conversionService.convertPurchaseOrderToGoodsReceipt(req.user.company_id, id, req.user.id, conversionData);
   }
 
   // GRN
@@ -103,6 +118,12 @@ export class PurchaseController {
   @RequirePermissions('purchase.reverse')
   reverseGoodsReceipt(@Request() req: any, @Param('id') id: string) {
     return this.purchaseService['postingService'].reverseGoodsReceipt(id, req.user.id); 
+  }
+
+  @Post('receipts/:id/convert')
+  @RequirePermissions('purchase.create')
+  convertGoodsReceipt(@Request() req: any, @Param('id') id: string, @Body() conversionData: any) {
+    return this.conversionService.convertGoodsReceiptToPurchaseInvoice(req.user.company_id, id, req.user.id, conversionData);
   }
 
   // Invoices
@@ -163,5 +184,42 @@ export class PurchaseController {
   @RequirePermissions('purchase.read')
   check3WayMatch(@Param('id') id: string) {
     return this.purchaseService.perform3WayMatch(id);
+  }
+
+  // Returns
+  @Post('returns')
+  @RequirePermissions('purchase.create')
+  createPurchaseReturn(@Request() req: any, @Body() data: any) {
+    return this.purchaseService.createPurchaseReturn(req.user.company_id, data);
+  }
+
+  @Get('returns')
+  @RequirePermissions('purchase.read')
+  getPurchaseReturns(@Request() req: any) {
+    return this.purchaseService.getPurchaseReturns(req.user.company_id);
+  }
+
+  @Get('returns/:id')
+  @RequirePermissions('purchase.read')
+  getPurchaseReturnById(@Param('id') id: string) {
+    return this.purchaseService.getPurchaseReturnById(id);
+  }
+
+  @Post('returns/:id/post')
+  @RequirePermissions('purchase.post')
+  postPurchaseReturn(@Request() req: any, @Param('id') id: string) {
+    return this.purchaseService.postPurchaseReturn(id, req.user.id);
+  }
+
+  @Post('returns/:id/reverse')
+  @RequirePermissions('purchase.reverse')
+  reversePurchaseReturn(@Request() req: any, @Param('id') id: string) {
+    return this.purchaseService['postingService'].reversePurchaseReturn(id, req.user.id);
+  }
+
+  @Post('returns/:id/replace')
+  @RequirePermissions('purchase.create')
+  replaceReturn(@Request() req: any, @Param('id') id: string, @Body() dto: any) {
+    return this.purchaseService.createReplacement(req.user.company_id, id, req.user.id, dto);
   }
 }

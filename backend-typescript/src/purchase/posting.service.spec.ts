@@ -35,6 +35,9 @@ describe('PostingService', () => {
             update: vi.fn(),
             create: vi.fn(),
           },
+          auditLog: {
+            create: vi.fn(),
+          },
         };
         return callback(tx);
       }),
@@ -143,6 +146,9 @@ describe('PostingService', () => {
           },
           stockBalanceProjection: {
             findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn()
+          },
+          auditLog: {
             create: vi.fn()
           }
         };

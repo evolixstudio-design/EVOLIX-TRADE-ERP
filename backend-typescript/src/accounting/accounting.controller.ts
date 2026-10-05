@@ -1,14 +1,21 @@
 import { Controller, Get, Post, Body, Param, Query, Req, UseGuards, ForbiddenException } from '@nestjs/common';
 import { AccountingService, CreateAccountDto } from './accounting.service';
 import { PostingService, CreateVoucherDto } from './posting.service';
-import { AuthGuard, RequirePermissions } from '../common/guards/auth.guard';
+import { CreditService } from './credit.service';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { SubscriptionGuard } from '../common/guards/subscription.guard';
+import { FeatureGuard, RequireFeature } from '../common/guards/feature.guard';
+import { PermissionGuard } from '../common/guards/permission.guard';
+import { RequirePermissions } from '../common/guards/auth.guard';
 
 @Controller('api/v1/accounting')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, SubscriptionGuard, FeatureGuard, PermissionGuard)
+@RequireFeature('ACCOUNTING')
 export class AccountingController {
   constructor(
     private readonly accountingService: AccountingService,
     private readonly postingService: PostingService,
+    private readonly creditService: CreditService,
   ) {}
 
   @Get('accounts')
@@ -84,5 +91,30 @@ export class AccountingController {
     if (!companyId) throw new ForbiddenException('No active company selected');
     
     return this.postingService.reverseVoucherWithIsolationChecks(companyId, id, req.user.id, reason);
+  }
+
+  @Get('parties/:id/outstanding')
+  @RequirePermissions('accounting.read')
+  async getPartyOutstanding(@Req() req: any, @Param('id') id: string) {
+    const companyId = req.user?.company_id;
+    if (!companyId) throw new ForbiddenException('No active company selected');
+    const outstanding = await this.creditService.getPartyOutstanding(companyId, id);
+    return { outstanding };
+  }
+
+  @Get('parties/:id/ageing')
+  @RequirePermissions('accounting.read')
+  async getPartyAgeing(@Req() req: any, @Param('id') id: string) {
+    const companyId = req.user?.company_id;
+    if (!companyId) throw new ForbiddenException('No active company selected');
+    return this.creditService.getPartyAgeing(companyId, id);
+  }
+
+  @Get('parties/:id/credit-status')
+  @RequirePermissions('accounting.read')
+  async getPartyCreditStatus(@Req() req: any, @Param('id') id: string) {
+    const companyId = req.user?.company_id;
+    if (!companyId) throw new ForbiddenException('No active company selected');
+    return this.creditService.checkCreditLimit(companyId, id, 0);
   }
 }

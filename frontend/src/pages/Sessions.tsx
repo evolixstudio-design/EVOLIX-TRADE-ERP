@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import api from '../api';
+import api from '../shared/api';
 import { Trash } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../shared/store/authStore';
 
 interface SessionData {
   id: string;
@@ -104,3 +104,4 @@ const Sessions = () => {
 };
 
 export default Sessions;
+

@@ -40,6 +40,14 @@ export class CreateSalesReturnDto {
   @IsUUID()
   original_invoice_id?: string;
 
+  @IsOptional()
+  @IsUUID()
+  reason_id?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateSalesReturnLineDto)

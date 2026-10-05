@@ -82,20 +82,20 @@ test.describe('Module 02 E2E', () => {
     await page.click('button:has-text("Create Financial Year")');
     await page.locator('.modal-content select').first().selectOption({ index: 1 });
     const randomYear = 2030 + Math.floor(Math.random() * 50);
-    const fyLabel = \`FY ${randomYear}-${randomYear + 1}\`;
+    const fyLabel = `FY ${randomYear}-${randomYear + 1}`;
     await page.locator('label:text-is("Label") ~ input').fill(fyLabel);
-    await page.locator('label:text-is("Start Date") ~ input').fill(\`${randomYear}-04-01\`);
-    await page.locator('label:text-is("End Date") ~ input').fill(\`${randomYear + 1}-03-31\`);
+    await page.locator('label:text-is("Start Date") ~ input').fill(`${randomYear}-04-01`);
+    await page.locator('label:text-is("End Date") ~ input').fill(`${randomYear + 1}-03-31`);
     await page.locator('form button[type="submit"]').click();
     await expect(page.locator('.modal-overlay')).not.toBeVisible();
-    await expect(page.locator(\`text=${fyLabel}\`).first()).toBeVisible();
+    await expect(page.locator(`text=${fyLabel}`).first()).toBeVisible();
 
     // 9. Overlapping FY Reject
     await page.click('button:has-text("Create Financial Year")');
     await page.locator('.modal-content select').first().selectOption({ index: 1 }); // Same company
     await page.locator('label:text-is("Label") ~ input').fill('FY Overlap');
-    await page.locator('label:text-is("Start Date") ~ input').fill(\`${randomYear}-10-01\`);
-    await page.locator('label:text-is("End Date") ~ input').fill(\`${randomYear + 1}-09-30\`);
+    await page.locator('label:text-is("Start Date") ~ input').fill(`${randomYear}-10-01`);
+    await page.locator('label:text-is("End Date") ~ input').fill(`${randomYear + 1}-09-30`);
     await page.locator('form button[type="submit"]').click();
     // Toast should show overlap error
     await expect(page.locator('text=overlaps with existing')).toBeVisible();

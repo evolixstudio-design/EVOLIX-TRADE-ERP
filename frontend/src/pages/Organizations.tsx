@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Ban, CheckCircle, X } from 'lucide-react';
-import api from '../api';
-import { Modal } from '../components/Modal';
+import api from '../shared/api';
+import { Modal } from '../shared/components/Modal';
 
 interface OrgData {
   id: string;
@@ -189,3 +189,4 @@ const Organizations = () => {
 };
 
 export default Organizations;
+

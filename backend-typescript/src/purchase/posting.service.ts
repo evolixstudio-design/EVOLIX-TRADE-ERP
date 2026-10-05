@@ -99,6 +99,18 @@ export class PostingService {
         });
       }
 
+      await tx.auditLog.create({
+        data: {
+          company_id: grn.company_id,
+          branch_id: grn.branch_id,
+          user_id: userId,
+          action: 'POSTED',
+          source_document_type: 'GOODS_RECEIPT',
+          source_document_id: grn.id,
+          details: 'GRN posted',
+        }
+      });
+
       // 3. Mark GRN POSTED
       return tx.goodsReceipt.update({
         where: { id: grn.id },
@@ -149,6 +161,18 @@ export class PostingService {
           data: { status },
         });
       }
+
+      await tx.auditLog.create({
+        data: {
+          company_id: grn.company_id,
+          branch_id: grn.branch_id,
+          user_id: userId,
+          action: 'REVERSED',
+          source_document_type: 'GOODS_RECEIPT',
+          source_document_id: grn.id,
+          details: 'GRN reversed',
+        }
+      });
 
       // Mark GRN CANCELLED
       return tx.goodsReceipt.update({
@@ -227,6 +251,18 @@ export class PostingService {
         lines,
       });
 
+      await tx.auditLog.create({
+        data: {
+          company_id: invoice.company_id,
+          branch_id: invoice.branch_id,
+          user_id: userId,
+          action: 'POSTED',
+          source_document_type: 'PURCHASE_INVOICE',
+          source_document_id: invoice.id,
+          details: 'Purchase Invoice posted',
+        }
+      });
+
       // 3. Mark Invoice POSTED
       return tx.purchaseInvoice.update({
         where: { id: invoice.id },
@@ -259,12 +295,202 @@ export class PostingService {
         await this.accountingPostingService.reverseVoucher(tx, voucher.id, userId, 'Invoice Cancelled');
       }
 
+      await tx.auditLog.create({
+        data: {
+          company_id: invoice.company_id,
+          branch_id: invoice.branch_id,
+          user_id: userId,
+          action: 'REVERSED',
+          source_document_type: 'PURCHASE_INVOICE',
+          source_document_id: invoice.id,
+          details: 'Purchase Invoice reversed',
+        }
+      });
+
       // Mark Invoice CANCELLED
       return tx.purchaseInvoice.update({
         where: { id: invoice.id },
         data: {
           status: 'CANCELLED',
           outstanding_amount: 0,
+        },
+      });
+    });
+  }
+
+  // ── PURCHASE RETURN POSTING & REVERSAL ────────────────────────────────────
+
+  async postPurchaseReturn(returnId: string, userId: string) {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const pReturn = await tx.purchaseReturn.findUnique({
+        where: { id: returnId },
+        include: { lines: true },
+      });
+
+      if (!pReturn) throw new BadRequestException('Purchase Return not found');
+      if (pReturn.status === 'POSTED') throw new BadRequestException('Purchase Return is already posted');
+      if (pReturn.status === 'CANCELLED') throw new BadRequestException('Cannot post cancelled purchase return');
+
+      if (Number(pReturn.grand_total) < 0) throw new BadRequestException('Total cannot be negative');
+
+      // 1. Post Inventory Movement (OUT)
+      const invLines: MovementLine[] = pReturn.lines.map((l: any) => ({
+        item_id: l.item_id,
+        godown_id: l.godown_id,
+        quantity: l.quantity,
+        unit_id: l.unit_id,
+        source_line_id: l.id
+      }));
+
+      await this.inventoryPostingService.postMovement(tx, {
+        company_id: pReturn.company_id,
+        branch_id: pReturn.branch_id,
+        movement_type: 'PURCHASE_RETURN_OUT',
+        business_date: pReturn.document_date,
+        source_document_type: 'PURCHASE_RETURN',
+        source_document_id: pReturn.id,
+        lines: invLines,
+      });
+
+      // 2. Accounting logic (Reverse of Purchase Invoice)
+      const getOrCreateLedger = async (code: string, name: string) => {
+        let acc = await tx.ledgerAccount.findFirst({ where: { company_id: pReturn.company_id, code } });
+        if (!acc) acc = await tx.ledgerAccount.create({ data: { company_id: pReturn.company_id, code, name, account_type: 'UNKNOWN', normal_balance: 'DEBIT' } });
+        return acc;
+      };
+
+      const payableAccount = await getOrCreateLedger('2000', 'Accounts Payable');
+      const purchaseReturnAccount = await getOrCreateLedger('5050', 'Purchase Returns');
+      const taxAccount = await getOrCreateLedger('2200', 'Input Tax');
+
+      const lines = [];
+
+      // Debit Accounts Payable
+      lines.push({
+        ledger_account_id: payableAccount.id,
+        party_id: pReturn.party_id,
+        debit: Number(pReturn.grand_total),
+        credit: 0,
+      });
+
+      // Credit Purchase Returns
+      if (Number(pReturn.taxable_amount) > 0) {
+        lines.push({
+          ledger_account_id: purchaseReturnAccount.id,
+          credit: Number(pReturn.taxable_amount),
+          debit: 0,
+        });
+      }
+
+      // Credit Tax
+      if (Number(pReturn.tax_amount) > 0) {
+        lines.push({
+          ledger_account_id: taxAccount.id,
+          credit: Number(pReturn.tax_amount),
+          debit: 0,
+        });
+      }
+
+      await this.accountingPostingService.postVoucher(tx, {
+        company_id: pReturn.company_id,
+        branch_id: pReturn.branch_id,
+        financial_year_id: pReturn.financial_year_id,
+        voucher_type: 'PURCHASE',
+        document_number: `PRV-${pReturn.document_number}`,
+        voucher_date: pReturn.document_date,
+        source_document_type: 'PURCHASE_RETURN',
+        source_document_id: pReturn.id,
+        narration: `Purchase Return ${pReturn.document_number}`,
+        posted_by: userId,
+        lines,
+      });
+
+      // 3. Adjust supplier payable on original invoice if applicable
+      if (pReturn.original_invoice_id) {
+        await tx.purchaseInvoice.update({
+          where: { id: pReturn.original_invoice_id },
+          data: {
+            outstanding_amount: { decrement: pReturn.grand_total }
+          }
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          company_id: pReturn.company_id,
+          branch_id: pReturn.branch_id,
+          user_id: userId,
+          action: 'POSTED',
+          source_document_type: 'PURCHASE_RETURN',
+          source_document_id: pReturn.id,
+          details: 'Purchase Return posted',
+        }
+      });
+
+      return tx.purchaseReturn.update({
+        where: { id: pReturn.id },
+        data: {
+          status: 'POSTED',
+          posted_at: new Date(),
+          posted_by: userId,
+        },
+      });
+    });
+  }
+
+  async reversePurchaseReturn(returnId: string, userId: string) {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const pReturn = await tx.purchaseReturn.findUnique({
+        where: { id: returnId },
+      });
+
+      if (!pReturn) throw new BadRequestException('Purchase Return not found');
+      if (pReturn.status !== 'POSTED') throw new BadRequestException('Only POSTED returns can be reversed');
+
+      // Reverse Inventory
+      await this.inventoryPostingService.reverseMovement(
+        tx,
+        pReturn.company_id,
+        'PURCHASE_RETURN',
+        pReturn.id,
+        'PURCHASE_RETURN_REVERSAL'
+      );
+
+      // Find the associated voucher
+      const voucher = await tx.voucher.findFirst({
+        where: { source_document_type: 'PURCHASE_RETURN', source_document_id: pReturn.id, status: 'POSTED' },
+      });
+
+      if (voucher) {
+        await this.accountingPostingService.reverseVoucher(tx, voucher.id, userId, 'Return Cancelled');
+      }
+
+      // Re-adjust supplier payable on original invoice
+      if (pReturn.original_invoice_id) {
+        await tx.purchaseInvoice.update({
+          where: { id: pReturn.original_invoice_id },
+          data: {
+            outstanding_amount: { increment: pReturn.grand_total }
+          }
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          company_id: pReturn.company_id,
+          branch_id: pReturn.branch_id,
+          user_id: userId,
+          action: 'REVERSED',
+          source_document_type: 'PURCHASE_RETURN',
+          source_document_id: pReturn.id,
+          details: 'Purchase Return reversed',
+        }
+      });
+
+      return tx.purchaseReturn.update({
+        where: { id: pReturn.id },
+        data: {
+          status: 'CANCELLED',
         },
       });
     });

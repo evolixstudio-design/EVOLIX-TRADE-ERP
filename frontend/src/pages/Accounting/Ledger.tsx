@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../../api';
+import api from '../../shared/api';
 import { BookOpen, ArrowLeft } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export default function Ledger() {
   const { id } = useParams();
@@ -118,3 +118,4 @@ export default function Ledger() {
     </div>
   );
 }
+

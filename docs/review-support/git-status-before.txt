@@ -1,0 +1,134 @@
+ M backend-typescript/migration.sql
+ M backend-typescript/package-lock.json
+ M backend-typescript/package.json
+ M backend-typescript/prisma/migrations/0_baseline/migration.sql
+ M backend-typescript/prisma/schema.prisma
+ M backend-typescript/src/accounting/accounting.controller.ts
+ M backend-typescript/src/accounting/accounting.module.ts
+ M backend-typescript/src/accounting/accounting.spec.ts
+ M backend-typescript/src/app.module.ts
+ M backend-typescript/src/common/guards/auth.guard.ts
+ M backend-typescript/src/intelligence/intelligence.service.spec.ts
+ M backend-typescript/src/intelligence/intent-handlers.ts
+ M backend-typescript/src/inventory/inventory.controller.ts
+ M backend-typescript/src/inventory/inventory.module.ts
+ M backend-typescript/src/purchase/posting.service.spec.ts
+ M backend-typescript/src/purchase/posting.service.ts
+ M backend-typescript/src/purchase/purchase.controller.ts
+ M backend-typescript/src/purchase/purchase.module.ts
+ M backend-typescript/src/purchase/purchase.service.ts
+ M backend-typescript/src/sales/dto/create-sales-return.dto.ts
+ M backend-typescript/src/sales/posting.service.ts
+ M backend-typescript/src/sales/sales.controller.ts
+ M backend-typescript/src/sales/sales.module.ts
+ M backend-typescript/src/sales/sales.service.ts
+ M backend-typescript/src/sales/sales.spec.ts
+ M backend-typescript/tsconfig.build.tsbuildinfo
+ M docs/BUSINESS_EVENT_IMPACT_MATRIX.md
+ M docs/MODULE_ROADMAP.md
+ M docs/MULTI_TENANT_IMPLEMENTATION_ROADMAP.md
+ M docs/MULTI_TENANT_TARGET_ARCHITECTURE.md
+ M frontend/src/App.tsx
+ M frontend/src/components/Shell.tsx
+ M frontend/src/index.css
+ M frontend/src/pages/Dashboard.tsx
+ M frontend/src/pages/Login.css
+ M frontend/src/pages/Login.tsx
+ M frontend/src/store/authStore.ts
+ M frontend/tests/module_02.spec.ts
+?? MODULE_11_FORENSIC_VERIFICATION.md
+?? MODULE_12_FORENSIC_VERIFICATION.md
+?? MODULE_13_PROGRESS_SNAPSHOT.md
+?? backend-typescript/all.sql
+?? backend-typescript/check.sql
+?? backend-typescript/check_user.js
+?? backend-typescript/create_db.js
+?? backend-typescript/prisma/migrations/20260928000000_phase2_platform_foundation/
+?? backend-typescript/prisma/migrations/20260928_company_configurations/
+?? backend-typescript/prisma/migrations/20260928_feature_entitlements/
+?? backend-typescript/prisma/migrations/20260928_retail_pos/
+?? backend-typescript/prisma/migrations/20260930123000_claims_replacement/
+?? backend-typescript/prisma/migrations/20260930_add_quotation_rel/
+?? backend-typescript/prisma/migrations/20261001120000_module_12_barcode_labels/
+?? backend-typescript/prisma/migrations/20261001130000_module_13_pricing_schemes/
+?? backend-typescript/prisma/migrations/20261002120000_add_dc_free_qty/
+?? backend-typescript/prisma/migrations/migration_lock.toml
+?? backend-typescript/prisma/migrations/pending.sql
+?? backend-typescript/reset_super.js
+?? backend-typescript/seed-admin.js
+?? backend-typescript/src/accounting/banking.controller.ts
+?? backend-typescript/src/accounting/banking.service.ts
+?? backend-typescript/src/accounting/credit.service.ts
+?? backend-typescript/src/accounting/gst.service.ts
+?? backend-typescript/src/accounting/module_14.spec.ts
+?? backend-typescript/src/accounting/module_15.spec.ts
+?? backend-typescript/src/accounting/module_16.spec.ts
+?? backend-typescript/src/accounting/module_17.spec.ts
+?? backend-typescript/src/accounting/reports.service.ts
+?? backend-typescript/src/barcode/
+?? backend-typescript/src/claims/
+?? backend-typescript/src/common/guards/feature.guard.ts
+?? backend-typescript/src/common/guards/permission.guard.ts
+?? backend-typescript/src/common/guards/subscription.guard.ts
+?? backend-typescript/src/intelligence/cloud-sync.service.ts
+?? backend-typescript/src/intelligence/module_24.spec.ts
+?? backend-typescript/src/inventory/adjustment.service.ts
+?? backend-typescript/src/inventory/batch-expiry.service.ts
+?? backend-typescript/src/inventory/branch-sync.service.ts
+?? backend-typescript/src/inventory/manufacturing.service.ts
+?? backend-typescript/src/inventory/module_06.spec.ts
+?? backend-typescript/src/inventory/module_21.spec.ts
+?? backend-typescript/src/inventory/module_23.spec.ts
+?? backend-typescript/src/inventory/module_25.spec.ts
+?? backend-typescript/src/inventory/opening-stock.service.ts
+?? backend-typescript/src/inventory/stock-count.service.ts
+?? backend-typescript/src/inventory/transfer.service.ts
+?? backend-typescript/src/platform/
+?? backend-typescript/src/pos/
+?? backend-typescript/src/pricing/
+?? backend-typescript/src/purchase/conversion.service.ts
+?? backend-typescript/src/purchase/module_10.spec.ts
+?? backend-typescript/src/sales/conversion.service.ts
+?? backend-typescript/src/sales/dispatch.service.ts
+?? backend-typescript/src/sales/dto/create-sales-quotation.dto.ts
+?? backend-typescript/src/sales/field-sales.service.ts
+?? backend-typescript/src/sales/module_10.spec.ts
+?? backend-typescript/src/sales/module_11.spec.ts
+?? backend-typescript/src/sales/module_11_extended.spec.ts
+?? backend-typescript/src/sales/module_18.spec.ts
+?? backend-typescript/src/sales/module_19.spec.ts
+?? backend-typescript/src/sales/module_20.spec.ts
+?? backend-typescript/src/sales/module_22.spec.ts
+?? backend-typescript/src/sales/pharmacy.service.ts
+?? backend-typescript/src/sales/retailer-portal.service.ts
+?? backend-typescript/src/system/
+?? docs/CONFIGURATION_FOUNDATION_IMPLEMENTATION.md
+?? docs/FOUNDATION_HARDENING_FORENSIC_VERIFICATION.md
+?? docs/GLOBAL_UI_SHELL_ARCHITECTURE.md
+?? docs/MODULE_06_FINAL_FORENSIC_VERIFICATION.md
+?? docs/MODULE_06_IMPLEMENTATION_MAP.md
+?? docs/MODULE_07_FORENSIC_VERIFICATION.md
+?? docs/MODULE_08_FORENSIC_VERIFICATION.md
+?? docs/MODULE_09_FORENSIC_VERIFICATION.md
+?? docs/MODULE_09_POS_ARCHITECTURE_DECISION.md
+?? docs/MODULE_09_POS_FORENSIC_VERIFICATION.md
+?? docs/MODULE_09_POS_IMPLEMENTATION.md
+?? docs/MODULE_10_FORENSIC_VERIFICATION.md
+?? docs/MODULE_11_FORENSIC_VERIFICATION.md
+?? docs/MODULE_12_FORENSIC_VERIFICATION.md
+?? docs/PHASE_02_PLATFORM_ADMIN_FORENSIC_VERIFICATION.md
+?? docs/PHASE_02_TENANT_MODEL_DECISION.md
+?? docs/POST_PHASE_02_NEXT_PHASE_GATE.md
+?? docs/TENANT_ACCESS_ENFORCEMENT_IMPLEMENTATION.md
+?? docs/review-support/
+?? frontend/src/components/PlatformShell.tsx
+?? frontend/src/components/TenantShell.tsx
+?? frontend/src/pages/Accounting/BankAccounts.tsx
+?? frontend/src/pages/Inventory/
+?? frontend/src/pages/Platform/
+?? frontend/src/pages/Pos/
+?? frontend/src/pages/Purchasing/GoodsReceipts.tsx
+?? frontend/src/pages/Purchasing/PurchaseInvoices.tsx
+?? frontend/src/pages/Purchasing/PurchaseReturns.tsx
+?? frontend/src/pages/Sales/
+?? scratch/

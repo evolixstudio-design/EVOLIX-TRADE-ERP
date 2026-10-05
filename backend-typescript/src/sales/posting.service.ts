@@ -43,6 +43,12 @@ export class SalesPostingService {
             if (total.gt(new Prisma.Decimal(orderLine.ordered_quantity))) {
               throw new BadRequestException('Cannot exceed ordered quantity');
             }
+            
+            // Update line delivered quantity
+            await tx.salesOrderLine.update({
+              where: { id: line.sales_order_line_id },
+              data: { delivered_quantity: total }
+            });
           }
         }
       }
@@ -59,14 +65,14 @@ export class SalesPostingService {
         lines: challan.lines.map(l => ({
           item_id: l.item_id,
           godown_id: l.godown_id,
-          quantity: l.dispatched_quantity.toString(),
+          quantity: new Prisma.Decimal(l.dispatched_quantity).add(new Prisma.Decimal(l.free_quantity || 0)).toString(),
           unit_id: l.unit_id,
           source_line_id: l.id,
           cost_rate: 0
         }))
       });
 
-      return tx.deliveryChallan.update({
+      const postedChallan = await tx.deliveryChallan.update({
         where: { id: challan.id },
         data: {
           status: 'DISPATCHED',
@@ -75,6 +81,35 @@ export class SalesPostingService {
         },
         include: { lines: true }
       });
+
+      if (challan.sales_order_id) {
+        // Check if all lines are fully delivered
+        const orderLines = await tx.salesOrderLine.findMany({ where: { sales_order_id: challan.sales_order_id } });
+        let allFullyDelivered = true;
+        for (const ol of orderLines) {
+          if (new Prisma.Decimal(ol.delivered_quantity).lt(new Prisma.Decimal(ol.ordered_quantity))) {
+            allFullyDelivered = false;
+            break;
+          }
+        }
+        await tx.salesOrder.update({
+          where: { id: challan.sales_order_id },
+          data: { status: allFullyDelivered ? 'FULLY_DELIVERED' : 'PARTIALLY_DELIVERED' }
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          company_id: challan.company_id,
+          branch_id: challan.branch_id,
+          user_id: userId,
+          action: 'DELIVERY_CHALLAN_POSTED',
+          source_document_type: 'DELIVERY_CHALLAN',
+          source_document_id: challan.id,
+        }
+      });
+
+      return postedChallan;
     });
   }
 
@@ -200,8 +235,7 @@ export class SalesPostingService {
         data: {
           status: 'POSTED',
           posted_at: new Date(),
-          posted_by: userId,
-          outstanding_amount: invoice.grand_total
+          posted_by: userId
         },
         include: { lines: true }
       });
@@ -342,9 +376,9 @@ export class SalesPostingService {
             company_id: sr.company_id,
             party_id: sr.party_id,
             voucher_line_id: customerVoucherLine.id,
-            reference_document_type: 'SALES_RETURN',
-            reference_document_id: sr.id,
-            allocation_type: 'AGAINST_REFERENCE',
+            reference_document_type: sr.original_invoice_id ? 'SALES_INVOICE' : 'SALES_RETURN',
+            reference_document_id: sr.original_invoice_id || sr.id,
+            allocation_type: sr.original_invoice_id ? 'AGAINST_REFERENCE' : 'NEW_REFERENCE',
             amount: sr.grand_total,
             due_date: sr.document_date
           }
@@ -432,8 +466,7 @@ export class SalesPostingService {
       const reversedInvoice = await tx.salesInvoice.update({
         where: { id: invoice.id },
         data: {
-          status: 'REVERSED',
-          outstanding_amount: 0
+          status: 'REVERSED'
         },
         include: { lines: true }
       });

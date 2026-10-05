@@ -18,16 +18,127 @@ const createUnimplementedIntent = (intentCode: string, requiredPermission: strin
 });
 
 export const getIntents = (prisma: PrismaService): IntentContract[] => [
-  createUnimplementedIntent('SALES_TODAY', 'sales.read', 'Sales Module (SalesInvoice)'),
-  createUnimplementedIntent('SALES_PERIOD', 'sales.read', 'Sales Module (SalesInvoice)'),
-  createUnimplementedIntent('CUSTOMER_OUTSTANDING', 'sales.read', 'Sales Module (SalesInvoice / BillAllocation)'),
-  createUnimplementedIntent('CUSTOMER_OUTSTANDING_DETAIL', 'sales.read', 'Sales Module (SalesInvoice / BillAllocation)'),
-  createUnimplementedIntent('LOW_STOCK', 'inventory.read', 'Inventory Module (Reorder levels)'),
-  createUnimplementedIntent('CASH_BALANCE', 'accounting.read', 'Accounting Module (Cash Ledger)'),
-  createUnimplementedIntent('BANK_BALANCE', 'accounting.read', 'Accounting Module (Bank Ledger)'),
-  createUnimplementedIntent('TOP_SELLING_ITEMS', 'sales.read', 'Sales Module (SalesInvoiceLines)'),
-  createUnimplementedIntent('SALES_RETURN_SUMMARY', 'sales.read', 'Sales Returns Module'),
   createUnimplementedIntent('EXPENSE_SUMMARY', 'accounting.read', 'Accounting Module (Expense Vouchers)'),
+  createUnimplementedIntent('PROFIT_SUMMARY', 'accounting.read', 'Accounting/Sales Modules'),
+  createUnimplementedIntent('STOCK_VALUE', 'inventory.read', 'Inventory Valuation Module'),
+
+  {
+    intentCode: 'SALES_TODAY',
+    displayName: 'Sales Today',
+    description: 'Shows today\'s sales totals',
+    requiredPermission: 'sales.read',
+    authoritativeDataSource: 'SalesInvoice',
+    handle: async (context: IntelligenceContext): Promise<IntelligenceResponse> => {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const invoices = await prisma.salesInvoice.findMany({
+        where: {
+          company_id: context.organizationId,
+          ...(context.branchId ? { branch_id: context.branchId } : {}),
+          status: 'POSTED',
+          document_date: { gte: startOfDay }
+        }
+      });
+      const total = invoices.reduce((sum, inv) => sum + Number(inv.grand_total), 0);
+      return {
+        intent: 'SALES_TODAY',
+        success: true,
+        answer: { headline: 'Today\'s Sales', value: total.toFixed(2), currency: 'KWD', summary: `${invoices.length} posted invoices today.` },
+        sources: invoices.map(i => ({ type: 'SalesInvoice', id: i.id, reference: i.document_number, label: `Invoice ${i.document_number}` })),
+        scope: { organizationId: context.organizationId, branchId: context.branchId },
+        generatedAt: new Date().toISOString()
+      };
+    }
+  },
+  {
+    intentCode: 'CUSTOMER_OUTSTANDING',
+    displayName: 'Customer Outstanding',
+    description: 'Shows total unpaid receivables',
+    requiredPermission: 'sales.read',
+    authoritativeDataSource: 'BillAllocation',
+    handle: async (context: IntelligenceContext): Promise<IntelligenceResponse> => {
+      const allocations = await prisma.billAllocation.findMany({
+        where: {
+          company_id: context.organizationId,
+          party: { party_type: 'CUSTOMER' }
+        },
+        include: { party: true }
+      });
+      const balancesByParty = new Map<string, { name: string, outstanding: number }>();
+      let totalOutstanding = 0;
+      
+      for (const alloc of allocations) {
+        const multiplier = alloc.allocation_type === 'NEW_REFERENCE' ? 1 : -1;
+        const amount = Number(alloc.amount) * multiplier;
+        if (!balancesByParty.has(alloc.party_id)) {
+          balancesByParty.set(alloc.party_id, { name: alloc.party.name, outstanding: 0 });
+        }
+        balancesByParty.get(alloc.party_id)!.outstanding += amount;
+        totalOutstanding += amount;
+      }
+      const debtors = Array.from(balancesByParty.entries()).filter(([_, data]) => data.outstanding > 0);
+
+      return {
+        intent: 'CUSTOMER_OUTSTANDING',
+        success: true,
+        answer: { headline: 'Customer Outstanding', value: totalOutstanding.toFixed(2), currency: 'KWD', summary: `Owed by ${debtors.length} customers.` },
+        sources: debtors.map(([partyId, data]) => ({ type: 'Party', id: partyId, reference: data.name, label: `${data.name} owes ${data.outstanding.toFixed(2)}` })),
+        scope: { organizationId: context.organizationId, branchId: context.branchId },
+        generatedAt: new Date().toISOString()
+      };
+    }
+  },
+  {
+    intentCode: 'OPEN_SALES_ORDERS',
+    displayName: 'Open Sales Orders',
+    description: 'Shows total value of open sales orders',
+    requiredPermission: 'sales.read',
+    authoritativeDataSource: 'SalesOrder',
+    handle: async (context: IntelligenceContext): Promise<IntelligenceResponse> => {
+      const orders = await prisma.salesOrder.findMany({
+        where: {
+          company_id: context.organizationId,
+          ...(context.branchId ? { branch_id: context.branchId } : {}),
+          status: { in: ['CONFIRMED', 'PARTIALLY_DELIVERED'] }
+        },
+        include: { party: true }
+      });
+      const total = orders.reduce((sum, o) => sum + Number(o.total), 0);
+      return {
+        intent: 'OPEN_SALES_ORDERS',
+        success: true,
+        answer: { headline: 'Open Sales Orders', value: total.toFixed(2), currency: 'KWD', summary: `${orders.length} open sales orders pending delivery.` },
+        sources: orders.map(o => ({ type: 'SalesOrder', id: o.id, reference: o.document_number, label: `SO ${o.document_number} for ${o.party.name}` })),
+        scope: { organizationId: context.organizationId, branchId: context.branchId },
+        generatedAt: new Date().toISOString()
+      };
+    }
+  },
+  {
+    intentCode: 'SALES_RETURN_SUMMARY',
+    displayName: 'Sales Return Summary',
+    description: 'Shows total sales returns',
+    requiredPermission: 'sales.read',
+    authoritativeDataSource: 'SalesReturn',
+    handle: async (context: IntelligenceContext): Promise<IntelligenceResponse> => {
+      const returns = await prisma.salesReturn.findMany({
+        where: {
+          company_id: context.organizationId,
+          ...(context.branchId ? { branch_id: context.branchId } : {}),
+          status: 'POSTED'
+        }
+      });
+      const total = returns.reduce((sum, r) => sum + Number(r.grand_total), 0);
+      return {
+        intent: 'SALES_RETURN_SUMMARY',
+        success: true,
+        answer: { headline: 'Sales Returns', value: total.toFixed(2), currency: 'KWD', summary: `Total of ${returns.length} posted sales returns.` },
+        sources: returns.map(r => ({ type: 'SalesReturn', id: r.id, reference: r.document_number, label: `Return ${r.document_number}` })),
+        scope: { organizationId: context.organizationId, branchId: context.branchId },
+        generatedAt: new Date().toISOString()
+      };
+    }
+  },
   createUnimplementedIntent('PROFIT_SUMMARY', 'accounting.read', 'Accounting/Sales Modules'),
   createUnimplementedIntent('STOCK_VALUE', 'inventory.read', 'Inventory Valuation Module'),
 
@@ -208,9 +319,16 @@ export const getIntents = (prisma: PrismaService): IntentContract[] => [
         take: 5
       });
 
+      const sales = await prisma.salesInvoice.findMany({
+        where: { company_id: context.organizationId, ...(context.branchId ? { branch_id: context.branchId } : {}), status: 'POSTED' },
+        orderBy: { posted_at: 'desc' },
+        take: 5
+      });
+
       const combined = [
         ...invoices.map(i => ({ type: 'PurchaseInvoice', date: i.posted_at || i.document_date, id: i.id, ref: i.document_number, label: 'Purchase Invoice' })),
-        ...receipts.map(r => ({ type: 'GoodsReceipt', date: r.posted_at || r.document_date, id: r.id, ref: r.document_number, label: 'Goods Receipt' }))
+        ...receipts.map(r => ({ type: 'GoodsReceipt', date: r.posted_at || r.document_date, id: r.id, ref: r.document_number, label: 'Goods Receipt' })),
+        ...sales.map(s => ({ type: 'SalesInvoice', date: s.posted_at || s.document_date, id: s.id, ref: s.document_number, label: 'Sales Invoice' }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
       return {

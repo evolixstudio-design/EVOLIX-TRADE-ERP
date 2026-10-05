@@ -1,0 +1,802 @@
+[
+  {
+    "Path": "backend-typescript/test\\security.e2e-spec.ts",
+    "Hash": "FF70A3D9E6A63CD840BD0E7BFB1C2BD54DDFBD1F1BB72156343B7D572C5CD80B"
+  },
+  {
+    "Path": "backend-typescript/test\\app.e2e-spec.ts",
+    "Hash": "38711A9F9D2DF97AF14C8BF2E0C3B31D89C6990C36665DA163B362817C035670"
+  },
+  {
+    "Path": "backend-typescript/prisma\\schema.prisma",
+    "Hash": "B610507DDE951001D86BB5F5E5D76D8D2311245759B5D9B8AA5A0738921BB3C7"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\pending.sql",
+    "Hash": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\migration_lock.toml",
+    "Hash": "1DB17A8D051AA136110736752C5E1F8B7ED92B6EA8E803112FBBE2497047C210"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\20261002120000_add_dc_free_qty\\migration.sql",
+    "Hash": "E4C0A8921700C3BDAC8247F24D94EC28286429BA412475B19F28C579AEE9FB1F"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\20261001130000_module_13_pricing_schemes\\migration.sql",
+    "Hash": "0B2EE867D7AAF4BC6CDA14809F3A62CE510DA63D1851501E366F35217BF0A5C9"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\20261001120000_module_12_barcode_labels\\migration.sql",
+    "Hash": "772158E596461F2D280C8300DC2A6136B5BB16EBAF0D96CE3BDCFCE90090F33E"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\20260930_add_quotation_rel\\migration.sql",
+    "Hash": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\20260930123000_claims_replacement\\migration.sql",
+    "Hash": "CEA4CB13CF8073597C6E9578A9BB62076088CB14C06C2FD6F2EB6A340B2FEE37"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\20260928_retail_pos\\migration.sql",
+    "Hash": "6AC22133C362C2AE3C2AF2B6D2D911F72C252E5F09628FC482942ACF303F2A87"
+  },
+  {
+    "Path": "backend-typescript/src\\system\\security.service.ts",
+    "Hash": "744DD8CB66A495D976E08B2AA3B0BD8634276C5B5EF6C284C7787B213BA2946E"
+  },
+  {
+    "Path": "backend-typescript/src\\system\\module_28.spec.ts",
+    "Hash": "028FA3AC207FEDBA97048DF413ACC63A15A2019E17E6A3B19015CA0A1D5B7BC1"
+  },
+  {
+    "Path": "backend-typescript/src\\system\\module_27.spec.ts",
+    "Hash": "51AA8AADFB9509E182974F94FF080AFCD5F17CC64683D5112AF382AE3BBCE9C3"
+  },
+  {
+    "Path": "backend-typescript/src\\system\\module_26.spec.ts",
+    "Hash": "3D80EC93C97527171A04EC498D503F78731302C1D78801FB258834B1671DEA9E"
+  },
+  {
+    "Path": "backend-typescript/src\\system\\licensing.service.ts",
+    "Hash": "316B94ED61736F46D266F4FECFC301CA001FC6E5C54320745E0D6D1C2C684399"
+  },
+  {
+    "Path": "backend-typescript/src\\system\\backup.service.ts",
+    "Hash": "AA3F695DB0189464F961CD0F909F3BBA356AA48978E1612AF9520DBB7D49F502"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\20260928_feature_entitlements\\migration.sql",
+    "Hash": "D78DEA43273F8769457E24774CF4B30D73C78AF07893CFA0A6775BD287820B84"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\20260928_company_configurations\\migration.sql",
+    "Hash": "3955CBE9CC692B8F2B40B77C0C3C2EAF5D74DB4E0F62C831FCB4BE42F57B778D"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\20260928000000_phase2_platform_foundation\\migration.sql",
+    "Hash": "C4088D6BF9D0ECB13C16B409BD07C34B4B540AC66FBEED3BE5BF552F0FE0A102"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\sales.spec.ts",
+    "Hash": "152E948109AFE073BBC0378925EDCD3AE7A384902DE18BD2DA5C067708F82129"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\sales.service.ts",
+    "Hash": "A1822EF016782B12471990867438E6183B077C127144812C18CB8ED4544D5A7E"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\sales.module.ts",
+    "Hash": "C762CD0535536667E348A054544477A69D49DB6EECDB06E71A7E0CE615512AFB"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\sales.controller.ts",
+    "Hash": "05023624FC8D569DD8130B87B38467FF981CF77ABCC7A0FE622E7C6DBE53D7B2"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\retailer-portal.service.ts",
+    "Hash": "26E3A65506401A9C9CC29D0F904DCC20A57ED3BCF4CA2EF24B99BD53C79584CA"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\posting.service.ts",
+    "Hash": "4A1F83A21A634DCD79A9275E6C534D71DC95CC46C464E3EAFC9A277BD1F51C56"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\pharmacy.service.ts",
+    "Hash": "5570C12F9965782324FD0C2F2FCD6ECF1C213AAA29ECF082A5ADD341208503BE"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\module_22.spec.ts",
+    "Hash": "715C2E90BF30F5F4BA78363789B87BA919033004939E84EF4E5F642B6F831458"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\module_20.spec.ts",
+    "Hash": "AFA04A3B82C08A5D62E9DD85A2806BE203C66D16458FF70B4C4393BC4B820A89"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\module_19.spec.ts",
+    "Hash": "6E31F08050DC50EFAB7AB6A88DC56237B9D21438B4D0ED95D11122DB5BD76CBC"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\module_18.spec.ts",
+    "Hash": "DE8740E3AC2225B0AE35E170ED6EF5E17211221B66DAA1B4B54D81964E579799"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\module_11_extended.spec.ts",
+    "Hash": "5AE9F0EFA074B2298F6568A83F68CF08BE4FC76FBBA40A22BAC0D3F6EF72D81B"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\module_11.spec.ts",
+    "Hash": "E2169FD7CBED9B96ECCDF0BAA7D188FC531F59362DCA9D35A2DFF7BACAF892D4"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\module_10.spec.ts",
+    "Hash": "6172F452C72162E52AEDC01404ECB7CB7DE331220005427277AE46C8A9D0DD3E"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\field-sales.service.ts",
+    "Hash": "4245C8EE771D1B5A06308557B7095D78CBF7EA2F532B33904E86F8CBC73211F6"
+  },
+  {
+    "Path": "backend-typescript/prisma\\migrations\\0_baseline\\migration.sql",
+    "Hash": "A975DE8737A2DAF01E52A24EC22471CCC55B4E2FB10A10A73E054DE2CB246172"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\dto\\create-sales-return.dto.ts",
+    "Hash": "51D2CA9BE3D967CE6842D69335B0422B2ACC5FB162592C0A01BF6F4CE1345875"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\dto\\create-sales-quotation.dto.ts",
+    "Hash": "FD482B0A8CC2BDC0B0C365439312BA7F71D9D526288E52F84BB959ED61398DDE"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\dto\\create-sales-order.dto.ts",
+    "Hash": "7FDD73992863C5541701951F5F8575F400C8FB1E7C864E663F94E2740E976A3C"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\dto\\create-sales-invoice.dto.ts",
+    "Hash": "858EB1739F26D51733ECDC7D5AD507388F97F1C5BBCD66036B70F592FE171133"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\dto\\create-delivery-challan.dto.ts",
+    "Hash": "B131858A4566FC664559D0A34C59D3B39198D4D74FAD5385D2AB0FEA001C8010"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\dispatch.service.ts",
+    "Hash": "A136BFE161B4CE7A1952E8DB6DCA086D33E04A01CCE517C0F12F251CA1221724"
+  },
+  {
+    "Path": "backend-typescript/src\\sales\\conversion.service.ts",
+    "Hash": "DC81114A7D5D101D17B292E46858E0F10B8E859FE7C6E1CF0BF3B9BD5E2B79BE"
+  },
+  {
+    "Path": "backend-typescript/src\\purchase\\purchase.service.ts",
+    "Hash": "BD79FE408A32BAB9AFB53142AF9D474FAA44AC08B814669CFC7CA0BC51C6836E"
+  },
+  {
+    "Path": "backend-typescript/src\\purchase\\purchase.module.ts",
+    "Hash": "2F05F9690F21C1FD4882AF6569C8DE8DFACB7FAA25D4588B7290DD8D3ECFFB7E"
+  },
+  {
+    "Path": "backend-typescript/src\\purchase\\purchase.controller.ts",
+    "Hash": "DBC1580CB20C7719D6F88F909C2889C8E868F93A0931F431673C2E7D9999AF1C"
+  },
+  {
+    "Path": "backend-typescript/src\\purchase\\posting.service.ts",
+    "Hash": "8EE358844F09C4B75DED1C819C9B24865C3C6DFD68159EEF51C044427E4742B5"
+  },
+  {
+    "Path": "backend-typescript/src\\purchase\\posting.service.spec.ts",
+    "Hash": "CE90607793B9891FF3D0786A9A7FC6B6603F08FF35B37649E403DC9AB26DA0A3"
+  },
+  {
+    "Path": "backend-typescript/src\\purchase\\module_10.spec.ts",
+    "Hash": "03FFDCA9DCF671A996D12825BF38F0EBC79FBDCD1478A63B4A4B81A171A6741F"
+  },
+  {
+    "Path": "backend-typescript/src\\purchase\\conversion.service.ts",
+    "Hash": "FC95BD8C75FF2DAA57710397C7BA22DBBD993C7566CFE4C997C028B039ED3A59"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\pricing.types.ts",
+    "Hash": "EC762A741F554660808821BFD476E6055FB87FF1364B03BCCF5A47D5DF87A49A"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\pricing.service.ts",
+    "Hash": "4EED29A581013DC5561795847B05AE2A8E3F395D79202D0E9A2FA27DCC2CBCA3"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\pricing.module.ts",
+    "Hash": "00F62B973DED41C7834530BFB800EDBC9CC5B9FF3C2889FB14ECA687EEEFAAC8"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\pricing.controller.ts",
+    "Hash": "59FDFE692D38C6BD38AD1D432F7B48426A72F51A16C4AB7C61B87C16046A4463"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\pricing-engine.service.ts",
+    "Hash": "6E558BB78E36837A59F4B34CC2CC801031FFB93A79E2DCC97864A42695714686"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\module_13.spec.ts",
+    "Hash": "49D0968024E9337E421ED5BD0BAADDF70E325386948785F8C7428018BA35FC16"
+  },
+  {
+    "Path": "backend-typescript/src\\database\\prisma.service.ts",
+    "Hash": "05B1B7002E89A4F9718DE796975397198487CC7C96888811959AFD9E98F33A28"
+  },
+  {
+    "Path": "backend-typescript/src\\database\\prisma.module.ts",
+    "Hash": "3636B6CB8CFD73899C1AD3D3291FD66100A081FEA2D73789118E39F80005B6DB"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\dto\\promotion-scheme.dto.ts",
+    "Hash": "B29D793E9C635A98F3CA4735E742F24163AD9E454135AF00C1E5F44E6942CB71"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\dto\\price-list-item.dto.ts",
+    "Hash": "F1AC362121F2DDF7E50C04EAA81F3DF7CD4CD30D63E946C2E5117F948CF87F39"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\dto\\evaluate-pricing.dto.ts",
+    "Hash": "956912E82B6005144C549524ABDD1C3B2B3BC894EA52802C0795D043F5AF0693"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\dto\\customer-rate.dto.ts",
+    "Hash": "479D2C12AC01E70086DADDB11912C8B890D5C914A43E5F0F297A15DA519FD303"
+  },
+  {
+    "Path": "backend-typescript/src\\pricing\\dto\\create-price-list.dto.ts",
+    "Hash": "7A7F023866B91462390E273C21E342CB3688388C47C63668C78576BCE3A289AB"
+  },
+  {
+    "Path": "backend-typescript/src\\pos\\pos.spec.ts",
+    "Hash": "59D05B5F9FBEB5CD147CD6915CFD29541CEF1D64E3F99B7CAF77CB808B00FB84"
+  },
+  {
+    "Path": "backend-typescript/src\\pos\\pos.service.ts",
+    "Hash": "DFB6D35A51BDBAE2B2CE61B3E44D5D0875313F11A46EF73FCA8AD7DC71B2B324"
+  },
+  {
+    "Path": "backend-typescript/src\\pos\\pos.module.ts",
+    "Hash": "50B5CC2BF6FD97EB151AF41A8B6362D36AF8D9CF737501622627FBA7AFC96A48"
+  },
+  {
+    "Path": "backend-typescript/src\\pos\\pos.controller.ts",
+    "Hash": "0C8F294E9125F1882D0BD068722DDABEA5E47462258D5EAB40C81C5B025563D1"
+  },
+  {
+    "Path": "backend-typescript/src\\common\\guards\\subscription.guard.ts",
+    "Hash": "7C331C0760AC26C6089C150555B07AEC4D8A4967D86AC4D1680389FF8DED21DF"
+  },
+  {
+    "Path": "backend-typescript/src\\common\\guards\\permission.guard.ts",
+    "Hash": "6D3CC47BE811EB65AAD754783C5AF208542ECE170F71C465D9FFBF120A225E43"
+  },
+  {
+    "Path": "backend-typescript/src\\common\\guards\\feature.guard.ts",
+    "Hash": "44FB2430692B60B294210CA09883EE83E5C659D3C20AF99D9453A3135EF52BC8"
+  },
+  {
+    "Path": "backend-typescript/src\\common\\guards\\auth.guard.ts",
+    "Hash": "AFC6A7B0B4F32E111F6D1B114204497EB7F01A633FF89C04A39A6FE75809A292"
+  },
+  {
+    "Path": "backend-typescript/src\\claims\\claims.service.ts",
+    "Hash": "45992C91B8E70BB0DBFD8812036F5A1FB39624073017F9806A55B4A7B3BD5E60"
+  },
+  {
+    "Path": "backend-typescript/src\\claims\\claims.module.ts",
+    "Hash": "952E0D06FD91F18DE9D7A785144222DF790D3BD9398200ACF4B7EB607F5E97EB"
+  },
+  {
+    "Path": "backend-typescript/src\\claims\\claims.controller.ts",
+    "Hash": "1B3A1DABD1579706A7D21F4263863ED31A902B22CF6EB5E229782A9B35EBC08C"
+  },
+  {
+    "Path": "backend-typescript/src\\pos\\dto\\shift.dto.ts",
+    "Hash": "66911300CFE4DDCB82939A9976A6194C9774722E23301F48053B400B4078091E"
+  },
+  {
+    "Path": "backend-typescript/src\\pos\\dto\\hold-bill.dto.ts",
+    "Hash": "6F3C55028811B8537F8BFA70087E56217EBD2813F8C28CEF4DC2785B7155D613"
+  },
+  {
+    "Path": "backend-typescript/src\\pos\\dto\\create-pos-sale.dto.ts",
+    "Hash": "88EAE9B88A347F3FB3A164895A6CB865ECD9CEF4552EC6FA67096867E545326D"
+  },
+  {
+    "Path": "backend-typescript/src\\pos\\dto\\create-pos-return.dto.ts",
+    "Hash": "E46CA18F06670056A29DA91B8797AEDFA55A7F73A1CF1C7457F56A38018FE580"
+  },
+  {
+    "Path": "backend-typescript/src\\pos\\barcode.spec.ts",
+    "Hash": "3831E219B1EDC5CDE749CA78C8D4C5450E08FBDCCC41F3481AED3BAB40D9F934"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\module_12.spec.ts",
+    "Hash": "649E2CEA421DF056A83EFBA93F672899A132675A051492C73B95DB1C3BFC9D94"
+  },
+  {
+    "Path": "backend-typescript/src\\platform\\tenants\\platform-admin.controller.ts",
+    "Hash": "0EE4653724FADC8CBA499AABD7DF792B159F56F42C68D9E4E9C399F43EDE5744"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\dto\\print-label.dto.ts",
+    "Hash": "7280EB8FF356173BD93EDAC6D131E518D7823353956323C328C0CC01204444DA"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\dto\\label-template.dto.ts",
+    "Hash": "079253239B8677CAF2AAA0BDD8D062DD9E4DBA11F5467D744149C9177E2E0778"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\dto\\inward-label.dto.ts",
+    "Hash": "77390917F0A106C08125FCF288A1D91F9396F48D9B1323D88511C98883FA96D0"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\dto\\generate-barcode.dto.ts",
+    "Hash": "FCAE4B0ED4F20CE3B8D264AF9516093AC76D8C00D94D754329549193D6C7757C"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\dto\\assign-barcode.dto.ts",
+    "Hash": "9769BC665A2329E444F9F22323B86828E489259943100E6E05BDF86CF004DA8C"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\barcode.service.ts",
+    "Hash": "51ED14B7D0F5C75F3305FE0A7F160847277B81135EB47580DC6D56C25EE00896"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\barcode.module.ts",
+    "Hash": "0EF76B240630DF27B61E70895CAE8959F9F42D42AA8FB9476C394107E01FBA45"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\barcode.controller.ts",
+    "Hash": "647104F0601665B7B6FAF7F997AC4B053007E8EF7C8D212F4DFEE655CDC693AC"
+  },
+  {
+    "Path": "backend-typescript/src\\barcode\\barcode-print.service.ts",
+    "Hash": "0C1C491FA16BACE0C2B3C3FFA37377DA81D3149C21ECC5A84A941377691389FC"
+  },
+  {
+    "Path": "backend-typescript/src\\platform\\provisioning\\tenant-provisioning.service.ts",
+    "Hash": "2D419BCFC60D1CE476CA06E700D349A66D5722C3413842D49780666386CFACC6"
+  },
+  {
+    "Path": "backend-typescript/src\\platform\\provisioning\\tenant-provisioning.module.ts",
+    "Hash": "8509EEF56A152864649671B16C320AE5E7C55BA5CBE8515BC7539DC357707D83"
+  },
+  {
+    "Path": "backend-typescript/src\\platform\\platform.spec.ts",
+    "Hash": "08C3DCB5AFD35685924DE3B8D5041075D50F865ED5FF6F2F9054EF3960625F87"
+  },
+  {
+    "Path": "backend-typescript/src\\platform\\platform.module.ts",
+    "Hash": "310F5EA9564F2B5036B426343CFA32C8E6D07585CF4A5C0A21AAFD0FD913D209"
+  },
+  {
+    "Path": "backend-typescript/src\\auth\\auth.service.ts",
+    "Hash": "D674E561073E0FD7F6C1E434C26E50308CF466CC0472DC959826900A0AAB4AED"
+  },
+  {
+    "Path": "backend-typescript/src\\auth\\auth.module.ts",
+    "Hash": "26B50B8E0A2EEDDD9B9609F0DBB8D3AA3B56ACF634E8F5EE58AA4CE972C58770"
+  },
+  {
+    "Path": "backend-typescript/src\\auth\\auth.controller.ts",
+    "Hash": "DE7BAF773524E2CCA24718691AE6A1A9B25F667517CAFB250F7060DC3656AFE0"
+  },
+  {
+    "Path": "backend-typescript/src\\app.service.ts",
+    "Hash": "5D4242D50092A353E5AB1F06663A89DBC714C7D9D70072EA03C83C5B14750F05"
+  },
+  {
+    "Path": "backend-typescript/src\\app.module.ts",
+    "Hash": "B6153F971BF6BBA440BA543F19E53C42D7F9C50704859A308B640F9CB7719268"
+  },
+  {
+    "Path": "backend-typescript/src\\app.controller.ts",
+    "Hash": "875CA3C77943D5F9251ACDB976BE4F1D50A832282148C4DEFC86FA33A88CD98E"
+  },
+  {
+    "Path": "backend-typescript/src\\app.controller.spec.ts",
+    "Hash": "AC49BE78331B7FE8FBA1264E905F3FA571458C8E059B2367F5833B3B185E84FD"
+  },
+  {
+    "Path": "backend-typescript/src\\platform\\auth\\platform-auth.service.ts",
+    "Hash": "FF6278D220DEDFF0512FD51C2AB6DE7AE99E47A48E73B83B953F3C0B1ACBF525"
+  },
+  {
+    "Path": "backend-typescript/src\\platform\\auth\\platform-auth.module.ts",
+    "Hash": "4A2B9DBE83CDAEEAE86046B62B80E16810AE5A062BE9ABF29C187554D35C634B"
+  },
+  {
+    "Path": "backend-typescript/src\\platform\\auth\\platform-auth.guard.ts",
+    "Hash": "FBC27FAC2F7122F805A075EBA7779C1D0F43CC2BB51AEFB7FACB30EB069DC7B8"
+  },
+  {
+    "Path": "backend-typescript/src\\platform\\auth\\platform-auth.controller.ts",
+    "Hash": "6BB098C00D0948C9E39586C2E9AEB1ABD5F56CE4044FE7B8BBBCC9A149BC9C4B"
+  },
+  {
+    "Path": "backend-typescript/src\\main.ts",
+    "Hash": "9628F0EA36DA40A843DB0D0317EA3D5F9020E90989D4DF975D7A636CD9D2FD81"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\reports.service.ts",
+    "Hash": "45C5250359CC75D863900ED0E5C4663D1A1AA1FFED6DFFD93AEAEBBA20DE56B4"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\posting.service.ts",
+    "Hash": "C36B5A21B8831A5210B82386AC7CA4070D35F6313A2E5CF295383D6F2DA788EB"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\module_17.spec.ts",
+    "Hash": "66482BC0E6DC529F0824C33054104BD18CFF90E764A6B732882FE07F3C99DDB2"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\module_16.spec.ts",
+    "Hash": "D6571B1BBFD61A9552F037F549512592F9AB7563B065662E694E42BB26486146"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\module_15.spec.ts",
+    "Hash": "2AB9AAB713BA0325B1B05692ED97280B15090216447906A814EB3CA587BE7389"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\module_14.spec.ts",
+    "Hash": "F715C2A04AE81236B150DCD7CCF7B7E92CF326DB40BB7498E6463E3EC73E6880"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\gst.service.ts",
+    "Hash": "3993D5BEEAF2CAC8DDD48ABD484519F32705CC160072F3AE175B360223567C8F"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\credit.service.ts",
+    "Hash": "3458CE57131B61141728E0E7169C68F0D7FB451D2485778B209CD3ABC3C2C093"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\banking.service.ts",
+    "Hash": "4F54F1FFBCC8A3FAD73C3BD3CDF1B0DE5F8EA2495F3D17485E88254BFA75B001"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\banking.controller.ts",
+    "Hash": "016AFAB32AB6EC8DED2987A638DB3EE826B30D8F863E9F3975E76D568C098A95"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\accounting.spec.ts",
+    "Hash": "4CFA3F628CC3D81E16688E1CF510433F04CE55EABED27E498C2C5BCD81B95316"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\accounting.service.ts",
+    "Hash": "2401CD6C453E7867F24C718E42331358F785C4DA4492500C02C2088D83A27905"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\accounting.module.ts",
+    "Hash": "F11A4FC025CBE3A8DA718B1F79229394AEE20F49BF40CD8E867151DE2B7F9975"
+  },
+  {
+    "Path": "backend-typescript/src\\accounting\\accounting.controller.ts",
+    "Hash": "9AD0895DC3A8FB8F7358D542DD5934EA4A981150110A35D1C8473E083307DB32"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\inventory.module.ts",
+    "Hash": "74A08356C04AD2F91BC66DC07F704556DBC1B90A7335F8EA28E7BB24E45E43FC"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\inventory.controller.ts",
+    "Hash": "84791595561B2854DF61EC553DB93DB5A2FAD4F048709E2ABF8CCFCC8F6D1C83"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\branch-sync.service.ts",
+    "Hash": "F64C01754517FF1B61DFC054B14D6FE70855C4E6E4B87023168D345B423E018F"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\batch-expiry.service.ts",
+    "Hash": "07F28D9056463B9B66D8A9D5B3B7EFAC90684DD30CCC9A5B985B35A3F0374AD4"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\adjustment.service.ts",
+    "Hash": "F76C2180B15B6295FF95509C336A2C71FD9A1BAA5D6AE5746A3C8006E0D968A1"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\transfer.service.ts",
+    "Hash": "2431668FFBA6B703A3AD5000100BC0873850EB20CD9FD68D7A1AF04DE7A02EF4"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\stock-count.service.ts",
+    "Hash": "70F815DFC5D81DDC7476A6FDC125A593FA8717F216031D0EC78B677D43226D91"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\posting.service.ts",
+    "Hash": "81AA49DDD5CA21759883060BAD8048A7F58D06606D121136F28781D4A856B7D8"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\opening-stock.service.ts",
+    "Hash": "12D1570D87D81AE1A45FFC6B5D29704D0C92A86C509A5B8AE2C3CBDF0F1D7FE9"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\module_25.spec.ts",
+    "Hash": "CFE78A832243E56B4353A7B7899A076C4B15D0CE18FD548D42C5218F145DEFC5"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\module_23.spec.ts",
+    "Hash": "F8245AF479425337AA706C5FE208A6A85B72B5C72FE6AE63E771C5DF83F5FC97"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\module_21.spec.ts",
+    "Hash": "06EBF362AAA5D728FB505056BD147DB0B27690C28CBD31780E87EF372D0ACE6B"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\module_06.spec.ts",
+    "Hash": "5BD1F0C5529A7DCDC5E769073B22EDA187237D5FC7365D06D872562B07258D76"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\manufacturing.service.ts",
+    "Hash": "E1A042A98B62C266BEB8C7F65B41DA89535708D304D9F6E899FBE536134D8DF0"
+  },
+  {
+    "Path": "backend-typescript/src\\inventory\\inventory.spec.ts",
+    "Hash": "9EB02132C6692AEABB6F4CFE16AE6933797174DE5E0C19C1F5E2C7719DF1FAC6"
+  },
+  {
+    "Path": "backend-typescript/src\\health\\health.module.ts",
+    "Hash": "B1C033AE95A1287B4D517D242EBECE43D089FBDD5FA355C5BDC74A069FEA9ED7"
+  },
+  {
+    "Path": "backend-typescript/src\\health\\health.controller.ts",
+    "Hash": "302A9F7CE87D732C4AD1DD9721C684FC45768A9206BF4614A46774A6E1385A6B"
+  },
+  {
+    "Path": "backend-typescript/src\\intelligence\\intelligence.service.spec.ts",
+    "Hash": "9B80B348DFA0BC96698DBFAA288EFC206EAE9FDBC13540D97009B2A852C3CC5D"
+  },
+  {
+    "Path": "backend-typescript/src\\intelligence\\intelligence.module.ts",
+    "Hash": "7B2F2FB69ADDEA6E0436D7462EB747067B774380AE4DD82C8C8E849CB9EE8AC4"
+  },
+  {
+    "Path": "backend-typescript/src\\intelligence\\intelligence.controller.ts",
+    "Hash": "06930DDF7BB18840224966CEF297143B1BA04C58D0F53DAC60E90AC3E8A8F724"
+  },
+  {
+    "Path": "backend-typescript/src\\intelligence\\cloud-sync.service.ts",
+    "Hash": "CAC096AEBC88ADF3285B65A627244AA006160B4D2B263C400D88AFEBF40E2826"
+  },
+  {
+    "Path": "backend-typescript/src\\intelligence\\intent-handlers.ts",
+    "Hash": "EAE22E6336D21E70A35F17B7BDC0D96FA2A2766A3E62ACD939A389B72E8AD744"
+  },
+  {
+    "Path": "backend-typescript/src\\intelligence\\intelligence.service.ts",
+    "Hash": "7D7A6A5D42BA353D876521E6F4AA9EF74F4378473A269C9650C8B661E697347F"
+  },
+  {
+    "Path": "backend-typescript/src\\intelligence\\intent-resolver.service.ts",
+    "Hash": "2C1F261AFD3FFE533C0FC19F4BB4F85674992BB795C0B5B8D1081C318A102A0C"
+  },
+  {
+    "Path": "backend-typescript/src\\intelligence\\interfaces.ts",
+    "Hash": "0DD43D4E571EC4D19F7D63AEAA26045CA53353CD4D24DBCB0215603789C5D237"
+  },
+  {
+    "Path": "backend-typescript/src\\intelligence\\module_24.spec.ts",
+    "Hash": "A3617B4EC91E6FB5360DEEAA916AE747FD65AD0437FD5D8961BC683A2F5FA4FB"
+  },
+  {
+    "Path": "frontend/tests\\module_02.spec.ts",
+    "Hash": "1C54A7C05F9D811DDFDB435BFFD744CFF986BB9565F65DBD49962BDDC1358C8F"
+  },
+  {
+    "Path": "frontend/tests\\auth.spec.ts",
+    "Hash": "29CFF550699B2FB11A96D4DD6B69D18C63462611EEAF60522231FEF7792E69AD"
+  },
+  {
+    "Path": "frontend/src\\store\\authStore.ts",
+    "Hash": "E0A884896A62986556492FFBD05728517FBF49BEA561FABF4F36E6D6BA3A1885"
+  },
+  {
+    "Path": "frontend/src\\pages\\Users.tsx",
+    "Hash": "BB72E92C577D2B815CBFA63411561C07B0DBD5609EB8FEABCA5FA46D02FC97EE"
+  },
+  {
+    "Path": "frontend/src\\pages\\Sessions.tsx",
+    "Hash": "25E1515CCED2A7B47E7B06F4502FA1EDB28277120328BC089F2127B12F026F2D"
+  },
+  {
+    "Path": "frontend/src\\pages\\Sales\\SalesReturns.tsx",
+    "Hash": "59AD296CA886E3ADF6D0CBF0F756A23F6E1037409E954208F0B349903CB186C2"
+  },
+  {
+    "Path": "frontend/src\\pages\\Sales\\SalesOrders.tsx",
+    "Hash": "00E8704D53D16C972747E694929B9947F6BEF00A3A9A268C4B9F60418B85FEF7"
+  },
+  {
+    "Path": "frontend/src\\pages\\Sales\\SalesOrderDetail.tsx",
+    "Hash": "7A0E021D85AFAFEC0CFA169188EEB8FBE11A12397A0CE711A19B9AB6E82891F7"
+  },
+  {
+    "Path": "frontend/src\\pages\\Sales\\SalesOrderCreate.tsx",
+    "Hash": "1E8A2B4FEA97862AC685E5CB574A24C8E19E8870AA7B7751E2B3E1901313BA2C"
+  },
+  {
+    "Path": "frontend/src\\pages\\Sales\\SalesInvoices.tsx",
+    "Hash": "2725D7799B427457212F61798EC39F48C3F2E2F61D7177686A87E3749477A5DC"
+  },
+  {
+    "Path": "frontend/src\\pages\\Sales\\SalesDashboard.tsx",
+    "Hash": "46C28FC8D5DBF7C76F4EB5A3E9BD9D3A7A90546C9BD99A3C75F97E6102B9641B"
+  },
+  {
+    "Path": "frontend/src\\pages\\Sales\\PricingSchemes.tsx",
+    "Hash": "BB60192F273B7472250AA31260432DD43700E7826AAB7F770E70B1659611105A"
+  },
+  {
+    "Path": "frontend/src\\pages\\Sales\\DeliveryChallans.tsx",
+    "Hash": "1B8DDE067286037A29C2BDB8BE379C5F3C390C89B74FF883FCDB14C981B35C55"
+  },
+  {
+    "Path": "frontend/src\\pages\\Roles.tsx",
+    "Hash": "21A1E83DD38AF191FAEEEC8F756E4170C0DDB906D18E8C92E539390C63167057"
+  },
+  {
+    "Path": "frontend/src\\components\\TenantShell.tsx",
+    "Hash": "6F1710487B57026F4827469A25197407DC9E18FB5F7B9EDE80A64AED8899E1B2"
+  },
+  {
+    "Path": "frontend/src\\components\\Shell.tsx",
+    "Hash": "F3A2F8B8EA712BAFE23E2B82E2980464F06A4268E6AC57E2B2227B22B0060917"
+  },
+  {
+    "Path": "frontend/src\\components\\PlatformShell.tsx",
+    "Hash": "295F95D6E5818C90CDF6B3F49EFC3A6AF5C639CB8F573AF4D6DD1ADFF5E406A2"
+  },
+  {
+    "Path": "frontend/src\\components\\Modal.tsx",
+    "Hash": "205A8AD213AC212FF1EECC7B641805DFCD8A04EA5A942CC4B2073D195C42A657"
+  },
+  {
+    "Path": "frontend/src\\components\\ErrorBoundary.tsx",
+    "Hash": "529E81B0F354D5F1D5D9B4DD6EDE8A3657AD32341CF69F90D4CFA9587C2B3931"
+  },
+  {
+    "Path": "frontend/src\\App.tsx",
+    "Hash": "813320BFE4F64BE6C64F838AC0270F2FA4707E70A74E84253C7340119BA98ED1"
+  },
+  {
+    "Path": "frontend/src\\App.css",
+    "Hash": "EFB48D790C5499274C5B0EF21F8F52CAF57977917302ED17D665C430CF777578"
+  },
+  {
+    "Path": "frontend/src\\api.ts",
+    "Hash": "6C0A9D9AB9F2D114EC18EDAB9A5B9A3330BF57CE57A64DE77E1DB37A281A4D63"
+  },
+  {
+    "Path": "frontend/src\\pages\\FinancialYears.tsx",
+    "Hash": "F55985659FC163A8F91CAE0BAA39530F48B5EAB6650B5361AE4B3CE0D9D5F422"
+  },
+  {
+    "Path": "frontend/src\\pages\\Dashboard.tsx",
+    "Hash": "CD91E0498ABD8DCC56A32B3E3D92757BD035B9A875B6106C20B6157C2C9E2876"
+  },
+  {
+    "Path": "frontend/src\\pages\\Companies.tsx",
+    "Hash": "B53A41E0BC351616A64676864EAB1F9BBFA52A3EFF2FFA0FC0177C7B84891CBD"
+  },
+  {
+    "Path": "frontend/src\\pages\\Branches.tsx",
+    "Hash": "6FA182086DCF366F13377BF83D88B3607533797F4CD3E4EFF49D91CB71C12696"
+  },
+  {
+    "Path": "frontend/src\\pages\\Accounting\\Ledger.tsx",
+    "Hash": "3CE28E6FC1DE83A6B48DF73084A8F54DAC804CDA23C94369E1CFF83F02DA0F4A"
+  },
+  {
+    "Path": "frontend/src\\pages\\Accounting\\ChartOfAccounts.tsx",
+    "Hash": "A45CD517B635647913BD84E09CDF95B4E4090D0E37AB802BDD5846FE0FF550B7"
+  },
+  {
+    "Path": "frontend/src\\pages\\Accounting\\BankAccounts.tsx",
+    "Hash": "27B652E9B54C1EB3131A0BA03B8C1D4DECFBD2AB43D91D26C60DC7C6777AD5DD"
+  },
+  {
+    "Path": "frontend/src\\main.tsx",
+    "Hash": "CAED5907ADE7164E4D285A30040D3FF4F47DCBE2463407B6972C3FAF9D3E1C09"
+  },
+  {
+    "Path": "frontend/src\\pages\\Purchasing\\PurchaseReturns.tsx",
+    "Hash": "A6FE439191753BBADCB51E32CBF08EC9A84C12677DFA08CF9A002674E3D6417E"
+  },
+  {
+    "Path": "frontend/src\\pages\\Purchasing\\PurchaseOrders.tsx",
+    "Hash": "2058C39EE20DCB02F90162314B31F4C13D0A71229C5BA020EF0BA95C6544155C"
+  },
+  {
+    "Path": "frontend/src\\pages\\Purchasing\\PurchaseOrderDetail.tsx",
+    "Hash": "7864656219C1055B35A3F6C05FFE17E11AE25B110698FCC853E696527E1A0F6E"
+  },
+  {
+    "Path": "frontend/src\\pages\\Purchasing\\PurchaseOrderCreate.tsx",
+    "Hash": "ABA17D76A1ABA399FAD16898A1602635030FB7B8EBC4DF615FD35E64F8285489"
+  },
+  {
+    "Path": "frontend/src\\pages\\Purchasing\\PurchaseInvoices.tsx",
+    "Hash": "3CFC75B5A6814E80953492E9252803DA96011F9D101744981989AEDBC53555B3"
+  },
+  {
+    "Path": "frontend/src\\pages\\Purchasing\\PurchaseDashboard.tsx",
+    "Hash": "F0EAF357D78B74B997AF1B0096EBED849DDB77E52F52FAD569B0F2F60AE9E305"
+  },
+  {
+    "Path": "frontend/src\\pages\\Purchasing\\GoodsReceipts.tsx",
+    "Hash": "7F68948FFFDE909AEB7BAC62E0B2E7882C8D65E0DDCA470008153024CC885388"
+  },
+  {
+    "Path": "frontend/src\\lib\\api.ts",
+    "Hash": "B4D49D446BF215CDBAEEF4CA6EBF50785F70ED2074313DA2C81012F16DE20982"
+  },
+  {
+    "Path": "frontend/src\\index.css",
+    "Hash": "EC77E364DE3BEEA2903500671531445A1068FF29D5314471F8D23FA37A455794"
+  },
+  {
+    "Path": "frontend/src\\pages\\Pos\\PosCheckout.tsx",
+    "Hash": "B980FCFF57BE84BFCD0016828538A99E5718C0F1F78DCF10D902E1887E22C825"
+  },
+  {
+    "Path": "frontend/src\\i18n\\index.ts",
+    "Hash": "E958199142BBA8AF7BFFC3E60F0A1453394EE4A0550AEEF59D29CD907CC4C302"
+  },
+  {
+    "Path": "frontend/src\\pages\\Platform\\PlatformTenants.tsx",
+    "Hash": "6E9FDD624D6D76F6E9CCF8FFCD22B11F184DACE93DB1ED33EF582FEA2CF6134E"
+  },
+  {
+    "Path": "frontend/src\\pages\\Platform\\PlatformDashboard.tsx",
+    "Hash": "EF7602181D82FF05E2530CE06F3D1AA2EEC0476B9EC34C09044A965E9BD91543"
+  },
+  {
+    "Path": "frontend/src\\pages\\Organizations.tsx",
+    "Hash": "A318E6E2C9476C85C2D2580B1E61D80A8C186275D6DD9FE2D55542742EEE8F5A"
+  },
+  {
+    "Path": "frontend/src\\pages\\Login.tsx",
+    "Hash": "4D238259C6FCE0D2887C27CBAD4F644E72C132E24E88DC3F12441591E90240DD"
+  },
+  {
+    "Path": "frontend/src\\pages\\Login.css",
+    "Hash": "86543DEA207BE1CC8E2E2C5E309BE7B410DED5F5BD5EE6A93A149049AA924590"
+  },
+  {
+    "Path": "frontend/src\\pages\\Intelligence.css",
+    "Hash": "C023BDB323B6485F42AB8850D70E84A7F26E0005D9D0D45276DF4736FD999D94"
+  },
+  {
+    "Path": "frontend/src\\pages\\Godowns.tsx",
+    "Hash": "414C7CC3F8B02EE497060D893824CECFE8A8102A22975D5DCE3278FBE2E37354"
+  },
+  {
+    "Path": "frontend/src\\pages\\Intelligence.tsx",
+    "Hash": "DE28A79EBE34FC18653744026F4DF4FC24C6BF8F21BFB6C322290DF683107A2E"
+  },
+  {
+    "Path": "frontend/src\\pages\\Inventory\\BarcodeLabels.tsx",
+    "Hash": "71839F4C86EE41D71539FCDBD172A95CC1AF25372B7E6B5FCE797E2BA75CAFEB"
+  },
+  {
+    "Path": "frontend/src\\pages\\Inventory\\StockAdjustments.tsx",
+    "Hash": "DBB94E6E9629C70B52D9FC6850BEF336044645A14567725CF0C3EC285A513B2C"
+  },
+  {
+    "Path": "frontend/src\\pages\\Inventory\\StockTransfers.tsx",
+    "Hash": "2C1F34BFCE5E127E9441665E04F35DAA3401FBFD7DDA0EEB1CF88CFE62A585FA"
+  },
+  {
+    "Path": "frontend/src\\pages\\Inventory\\StockSummary.tsx",
+    "Hash": "3B4F4E9EF86CFD4CCEDAA5780CDE1B85F7148EE64B83F1777365FE7A43085A55"
+  },
+  {
+    "Path": "frontend/src\\pages\\Inventory\\StockMovements.tsx",
+    "Hash": "53D40BA03892B57281DB4CD3BE702DA1FAAA8AA850B4E6B39BCBA519FEB09B46"
+  }
+]

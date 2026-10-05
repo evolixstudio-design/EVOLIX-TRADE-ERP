@@ -36,64 +36,35 @@ describe('Accounting Core - Expanded Verification Suite', () => {
     authGuard = module.get<AuthGuard>(AuthGuard);
 
     // Setup test data
-    await prisma.voucherLine.deleteMany({});
-    await prisma.voucher.deleteMany({});
-    await prisma.auditLog.deleteMany({});
-    await prisma.ledgerAccount.deleteMany({});
-    await prisma.financialYear.deleteMany({});
-    await prisma.stockBalanceProjection.deleteMany({});
-    await prisma.stockMovement.deleteMany({});
-    await prisma.godown.deleteMany({});
-    await prisma.branch.deleteMany({});
-    await prisma.party.deleteMany({});
-    await prisma.item.deleteMany({});
-    await prisma.unit.deleteMany({});
-    await prisma.taxClass.deleteMany({});
-    await prisma.company.deleteMany({});
-    await prisma.user.deleteMany({});
-    await prisma.organization.deleteMany({});
+    // Global deleteMany removed to prevent cross-suite interference
+
     const org = await prisma.organization.create({ data: { name: `Test Org A ${Date.now()}`, code: `TO-A-${Date.now()}` } });
     const orgB = await prisma.organization.create({ data: { name: `Test Org B ${Date.now()}`, code: `TO-B-${Date.now()}` } });
     
-    const compA = await prisma.company.create({ data: { organization_id: org.id, code: 'C-A', legal_name: 'Comp A' } });
-    const compB = await prisma.company.create({ data: { organization_id: orgB.id, code: 'C-B', legal_name: 'Comp B' } });
+    const compA = await prisma.company.create({ data: { organization_id: org.id, code: `C-A-${Date.now()}`, legal_name: 'Comp A' } });
+    const compB = await prisma.company.create({ data: { organization_id: orgB.id, code: `C-B-${Date.now()}`, legal_name: 'Comp B' } });
     orgId = compA.id;
     
     const testUser = await prisma.user.create({ data: { organization_id: org.id, email: `acc${Date.now()}@test.com`, username: `acctest${Date.now()}`, password_hash: '123', display_name: 'Test User' } });
     userId = testUser.id;
 
-    const branchA = await prisma.branch.create({ data: { company_id: compA.id, code: 'B-A', name: 'Branch A' } });
+    const branchA = await prisma.branch.create({ data: { company_id: compA.id, code: `B-A-${Date.now()}`, name: 'Branch A' } });
     branchId = branchA.id;
     
     const fyA = await prisma.financialYear.create({ data: { company_id: compA.id, label: '2026-27', start_date: new Date('2026-04-01'), end_date: new Date('2027-03-31') } });
     fyId = fyA.id;
 
-    const acc1 = await prisma.ledgerAccount.create({ data: { company_id: compA.id, branch_id: branchA.id, code: '1001', name: 'Cash', account_type: 'ASSET', normal_balance: 'DEBIT' } });
-    const acc2 = await prisma.ledgerAccount.create({ data: { company_id: compA.id, branch_id: branchA.id, code: '3001', name: 'Sales', account_type: 'REVENUE', normal_balance: 'CREDIT' } });
-    const accOrgB = await prisma.ledgerAccount.create({ data: { company_id: compB.id, code: '1002', name: 'Cash B', account_type: 'ASSET', normal_balance: 'DEBIT' } });
+    const acc1 = await prisma.ledgerAccount.create({ data: { company_id: compA.id, branch_id: branchA.id, code: `1001-${Date.now()}`, name: 'Cash', account_type: 'ASSET', normal_balance: 'DEBIT' } });
+    const acc2 = await prisma.ledgerAccount.create({ data: { company_id: compA.id, branch_id: branchA.id, code: `3001-${Date.now()}`, name: 'Sales', account_type: 'REVENUE', normal_balance: 'CREDIT' } });
+    const accOrgB = await prisma.ledgerAccount.create({ data: { company_id: compB.id, code: `1002-${Date.now()}`, name: 'Cash B', account_type: 'ASSET', normal_balance: 'DEBIT' } });
     
     account1Id = acc1.id;
     account2Id = acc2.id;
     accountOrgBId = accOrgB.id;
-  });
+  }, 30000);
 
   afterAll(async () => {
-    await prisma.voucherLine.deleteMany({});
-    await prisma.voucher.deleteMany({});
-    await prisma.auditLog.deleteMany({});
-    await prisma.ledgerAccount.deleteMany({});
-    await prisma.financialYear.deleteMany({});
-    await prisma.stockBalanceProjection.deleteMany({});
-    await prisma.stockMovement.deleteMany({});
-    await prisma.godown.deleteMany({});
-    await prisma.branch.deleteMany({});
-    await prisma.party.deleteMany({});
-    await prisma.item.deleteMany({});
-    await prisma.unit.deleteMany({});
-    await prisma.taxClass.deleteMany({});
-    await prisma.company.deleteMany({});
-    await prisma.user.deleteMany({});
-    await prisma.organization.deleteMany({});
+    // Global deleteMany removed to prevent cross-suite interference
     await prisma.$disconnect();
   });
 
@@ -102,6 +73,8 @@ describe('Accounting Core - Expanded Verification Suite', () => {
       // Mocked validation test bypassing DB
       const result = await (postingService as any).postVoucher(prisma, {
         company_id: orgId,
+        voucher_type: 'JOURNAL',
+        document_number: 'TEST',
         lines: [{ debit: 100, credit: 0 }, { debit: 0, credit: 100 }]
       }).catch((e: any) => e.message);
       // We expect it to not fail on balance, it might fail on DB insert since accounts don't exist
@@ -156,6 +129,8 @@ describe('Accounting Core - Expanded Verification Suite', () => {
     it('5. should enforce decimal precision properly', async () => {
       const resultFloat = await (postingService as any).postVoucher(prisma, {
         company_id: orgId,
+        voucher_type: 'JOURNAL',
+        document_number: 'TEST',
         lines: [{ debit: 0.10 + 0.20, credit: 0 }, { debit: 0, credit: 0.30 }]
       }).catch((e: any) => e.message);
       expect(resultFloat).toContain('must be balanced');
@@ -163,6 +138,7 @@ describe('Accounting Core - Expanded Verification Suite', () => {
       const resultString = await (postingService as any).postVoucher(prisma, {
         company_id: orgId,
         voucher_type: 'JOURNAL',
+        document_number: 'TEST',
         lines: [{ debit: '0.30', credit: 0 }, { debit: 0, credit: '0.30' }]
       }).catch((e: any) => e.message);
       expect(resultString).not.toContain('must be balanced');
