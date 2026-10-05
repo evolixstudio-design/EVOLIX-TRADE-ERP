@@ -6,8 +6,8 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useBillStore } from './retailStore';
-import { itemApi, khataApi, type RetailItem, type RetailCustomer } from './retailApi';
+import { useBillStore } from '../retailStore';
+import { itemApi, khataApi, type RetailItem, type RetailCustomer } from '../retailApi';
 import {
   Search, Camera, X, Minus, Plus, ChevronRight,
   User, Trash2, Pause, Receipt
@@ -134,9 +134,15 @@ const RetailNewBill = () => {
           {billItems.length > 0 && (
             <button
               className="r-btn r-btn--ghost r-btn--sm"
-              onClick={() => {
-                // Hold bill
-                navigate('/retail/home');
+              onClick={async () => {
+                try {
+                  await posApi.holdBill('default-branch', billItems);
+                  clearBill();
+                  navigate('/retail/home');
+                } catch (e) {
+                  console.error(e);
+                  alert('Failed to hold bill');
+                }
               }}
               id="hold-bill-btn"
             >

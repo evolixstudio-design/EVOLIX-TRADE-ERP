@@ -10,8 +10,8 @@ import {
   ArrowLeft, Banknote, Smartphone, Clock, Divide,
   X, Check
 } from 'lucide-react';
-import { useBillStore, useSaleCompleteStore, type PaymentSplit } from './retailStore';
-import { khataApi, posApi, type RetailCustomer } from './retailApi';
+import { useBillStore, useSaleCompleteStore, type PaymentSplit } from '../retailStore';
+import { khataApi, posApi, type RetailCustomer } from '../retailApi';
 
 type PaymentMode = 'CASH' | 'UPI' | 'UDHAR' | 'SPLIT';
 

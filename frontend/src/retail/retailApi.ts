@@ -94,13 +94,35 @@ export const posApi = {
     total_amount: number;
     discount: number;
   }) => {
-    // Maps to: POST /api/v1/erp/pos/sale
-    return api.post('/erp/pos/sale', payload);
+    // Maps to: POST /api/v1/retail/bills
+    return api.post('/retail/bills', payload);
   },
   
   holdBill: async (branchId: string, items: any[]) => {
-    // Maps to: POST /api/v1/erp/pos/held-bills
-    return api.post('/erp/pos/held-bills', { branch_id: branchId, items });
+    // Maps to: POST /api/v1/retail/bills/hold
+    return api.post('/retail/bills/hold', { items });
+  },
+
+  getHeldBills: async (branchId: string) => {
+    // Maps to: GET /api/v1/retail/bills/hold
+    return api.get(`/retail/bills/hold?branch_id=${branchId}`);
+  },
+  
+  resumeBill: async (id: string) => {
+    // Maps to: POST /api/v1/retail/bills/hold/:id/resume
+    return api.post(`/retail/bills/hold/${id}/resume`);
+  },
+
+  getBills: async (params?: any) => {
+    return api.get('/retail/bills', { params });
+  },
+
+  getBillDetail: async (id: string) => {
+    return api.get(`/retail/bills/${id}`);
+  },
+
+  postReturn: async (payload: { original_invoice_id: string; lines: any[]; refund_method: string }) => {
+    return api.post('/retail/bills/return', payload);
   }
 };
 

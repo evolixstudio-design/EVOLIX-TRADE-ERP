@@ -75,6 +75,13 @@ const RetailHome = () => {
           <span>New Bill</span>
         </button>
 
+        <button className="r-quick-action" onClick={() => navigate('/retail/bills/held')} id="qa-held-bills">
+          <div className="r-quick-action-icon r-quick-action-icon--blue">
+            <ShoppingCart size={20} />
+          </div>
+          <span>Held Bills</span>
+        </button>
+
         <button className="r-quick-action" onClick={() => navigate('/retail/expenses/add')} id="qa-add-expense">
           <div className="r-quick-action-icon r-quick-action-icon--orange">
             <Wallet size={20} />

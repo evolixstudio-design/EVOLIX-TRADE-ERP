@@ -4,6 +4,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
+import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 
 describe('Expenses (e2e)', () => {
   let app: INestApplication;

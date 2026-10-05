@@ -313,4 +313,51 @@ describe('Retail Flow (e2e)', () => {
     expect(khata.balance).toBe(500); // 0 + 500
   });
 
+  // ============================================================
+  // PHASE 4 FLOW TESTS
+  // ============================================================
+
+  it('should hold a bill and then resume it', async () => {
+    // Hold bill via BillingController logic
+    const holdBill = await posService.holdBill(compAId, userAId, {
+      branch_id: branchAId,
+      lines: [{
+        item_id: testItemId,
+        godown_id: godownAId,
+        unit_id: unitId,
+        quantity: 5,
+        rate: 50
+      }]
+    });
+    
+    expect(holdBill).toBeDefined();
+    
+    const heldBills = await posService.getHeldBills(compAId, branchAId, userAId);
+    expect(heldBills.length).toBeGreaterThanOrEqual(1);
+
+    const resumedBill = await posService.resumeBill(holdBill.id, compAId, userAId);
+    expect(resumedBill).toBeDefined();
+    expect(resumedBill.lines.length).toBe(1);
+
+    const afterResume = await posService.getHeldBills(compAId, branchAId, userAId);
+    expect(afterResume.find(b => b.id === holdBill.id)).toBeUndefined();
+  });
+
+  it('should process a Sale Return for the CASH sale', async () => {
+    const sr = await posService.postPosReturn(compAId, userAId, {
+      branch_id: branchAId,
+      original_invoice_id: testInvoiceId,
+      document_date: new Date().toISOString(),
+      lines: [{
+        item_id: testItemId,
+        godown_id: godownAId,
+        unit_id: unitId,
+        quantity: 1, // Returning 1 qty
+        rate: 45
+      }]
+    });
+
+    expect(sr).toBeDefined();
+    expect(Number(sr.taxable_amount)).toBe(45);
+  });
 });

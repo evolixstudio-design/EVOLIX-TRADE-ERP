@@ -37,9 +37,14 @@ import PlatformTenants from './admin/platform/PlatformTenants';
 // ── Retail V1 Pages ──────────────────────────────
 import RetailShell from './retail/RetailShell';
 import RetailHome from './retail/RetailHome';
-import RetailNewBill from './retail/RetailNewBill';
-import RetailPayment from './retail/RetailPayment';
-import RetailSaleComplete from './retail/RetailSaleComplete';
+import RetailNewBill from './retail/billing/RetailNewBill';
+import RetailBillHistory from './retail/billing/RetailBillHistory';
+import RetailBillDetail from './retail/billing/RetailBillDetail';
+import RetailReturn from './retail/billing/RetailReturn';
+import RetailThermalReceipt from './retail/billing/RetailThermalReceipt';
+import RetailHeldBills from './retail/billing/RetailHeldBills';
+import RetailPayment from './retail/billing/RetailPayment';
+import RetailSaleComplete from './retail/billing/RetailSaleComplete';
 import RetailItems from './retail/RetailItems';
 import RetailAddItem from './retail/RetailAddItem';
 import RetailKhata from './retail/RetailKhata';
@@ -131,6 +136,11 @@ function App() {
           <Route index element={<Navigate to="/retail/home" replace />} />
           <Route path="home" element={<RetailHome />} />
           <Route path="bill" element={<RetailNewBill />} />
+          <Route path="bills" element={<RetailBillHistory />} />
+          <Route path="bills/:id" element={<RetailBillDetail />} />
+          <Route path="bills/:id/print" element={<RetailThermalReceipt />} />
+          <Route path="bills/:id/return" element={<RetailReturn />} />
+          <Route path="bills/held" element={<RetailHeldBills />} />
           <Route path="payment" element={<RetailPayment />} />
           <Route path="sale-complete" element={<RetailSaleComplete />} />
           <Route path="items" element={<RetailItems />} />

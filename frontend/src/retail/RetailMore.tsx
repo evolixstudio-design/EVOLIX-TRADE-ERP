@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ShoppingCart, IndianRupee, TrendingUp,
   Wallet, Users, BookUser, Settings,
-  LogOut, UserCircle, ChevronRight, Grid, Database
+  LogOut, UserCircle, ChevronRight, Grid, Database, Receipt
 } from 'lucide-react';
 import { useAuthStore } from '../shared/store/authStore';
 
@@ -24,6 +24,7 @@ const RetailMore = () => {
     {
       title: 'Business',
       items: [
+        { icon: Receipt, label: 'Bill History', desc: 'View past bills', path: '/retail/bills' },
         { icon: ShoppingCart, label: 'Purchases', desc: 'Add or view purchases', path: '/retail/purchases' },
         { icon: IndianRupee, label: 'Expenses', desc: 'Manage daily expenses', path: '/retail/more/expenses' },
         { icon: TrendingUp, label: 'Reports', desc: 'Sales, Profit, Stock reports', path: '/retail/more/reports' },

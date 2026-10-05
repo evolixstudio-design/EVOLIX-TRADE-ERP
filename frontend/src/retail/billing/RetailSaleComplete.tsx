@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Check, Plus, Printer, Share2, Eye
 } from 'lucide-react';
-import { useSaleCompleteStore } from './retailStore';
+import { useSaleCompleteStore } from '../retailStore';
 
 const RetailSaleComplete = () => {
   const navigate = useNavigate();
