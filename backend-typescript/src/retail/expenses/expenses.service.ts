@@ -92,6 +92,7 @@ export class ExpensesService {
           note: dto.note,
           status: 'POSTED',
           voucher_id: voucher.id,
+          attachment_id: dto.attachment_id || null,
           created_by: userId,
         }
       });
@@ -104,6 +105,17 @@ export class ExpensesService {
           source_document_id: expense.id
         }
       });
+
+      // Update Attachment record
+      if (dto.attachment_id) {
+        await tx.attachment.update({
+          where: { id: dto.attachment_id },
+          data: {
+            entity_type: 'EXPENSE_BILL',
+            entity_id: expense.id
+          }
+        });
+      }
 
       return expense;
     });
@@ -195,10 +207,118 @@ export class ExpensesService {
     return { success: true };
   }
 
-  async update(companyId: string, userId: string, id: string, dto: any) {
-    // Only simple patch logic: reverse the old voucher and create a new one!
-    // But wait, the requirements say "Reverse old posting, Create corrected posting"
-    throw new BadRequestException('Expense update not fully implemented, use cancellation instead');
+  async update(
+    organizationId: string,
+    companyId: string,
+    branchId: string,
+    userId: string,
+    financialYearId: string,
+    id: string,
+    dto: CreateExpenseDto
+  ) {
+    if (!financialYearId) {
+      throw new BadRequestException('financialYearId is required');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const expense = await tx.expense.findFirst({
+        where: { id, company_id: companyId }
+      });
+      if (!expense) throw new NotFoundException('Expense not found');
+      if (expense.status === 'CANCELLED') throw new BadRequestException('Cannot edit cancelled expense');
+
+      // Reverse old voucher
+      await this.postingService.reverseVoucherWithIsolationChecks(companyId, expense.voucher_id!, userId, 'Reversed for Edit');
+
+      // Resolve new Ledgers
+      let debitLedgerId: string;
+      if (dto.type === 'BUSINESS_EXPENSE') {
+        const category = await tx.expenseCategory.findFirst({
+          where: { id: dto.category_id, company_id: companyId }
+        });
+        if (!category) throw new BadRequestException('Invalid category');
+        if (!category.ledger_id) {
+          throw new BadRequestException(`Category ${category.name} is not mapped to an accounting ledger.`);
+        }
+        debitLedgerId = category.ledger_id;
+      } else {
+        const drawingsLedger = await this.getOrCreateDrawingsLedger(tx, companyId, branchId);
+        debitLedgerId = drawingsLedger.id;
+      }
+
+      const creditLedgerId = await this.getPaymentLedger(tx, companyId, branchId, dto.payment_method);
+
+      // Post new Voucher
+      const narration = dto.type === 'OWNER_WITHDRAWAL' 
+        ? `Owner Withdrawal (Edited): ${dto.note || ''}` 
+        : `Expense Paid (Edited): ${dto.note || ''}`;
+
+      const voucherDto = {
+        company_id: companyId,
+        branch_id: branchId,
+        financial_year_id: financialYearId,
+        voucher_type: 'PAYMENT',
+        document_number: `EXP-EDIT-${Date.now()}`,
+        voucher_date: new Date(dto.date),
+        narration: narration,
+        posted_by: userId,
+        lines: [
+          {
+            ledger_account_id: debitLedgerId,
+            debit: dto.amount,
+            credit: 0,
+            narration: dto.note || 'Expense'
+          },
+          {
+            ledger_account_id: creditLedgerId,
+            debit: 0,
+            credit: dto.amount,
+            narration: 'Payment'
+          }
+        ]
+      };
+
+      const newVoucher = await this.postingService.postVoucher(tx, voucherDto);
+
+      // Update Expense Record
+      const updatedExpense = await tx.expense.update({
+        where: { id },
+        data: {
+          type: dto.type,
+          category_id: dto.type === 'BUSINESS_EXPENSE' ? dto.category_id : null,
+          amount: dto.amount,
+          payment_method: dto.payment_method,
+          date: new Date(dto.date),
+          paid_to: dto.paid_to,
+          bill_number: dto.bill_number,
+          note: dto.note,
+          voucher_id: newVoucher.id,
+          attachment_id: dto.attachment_id || null,
+        }
+      });
+
+      // Update new voucher source document link
+      await tx.voucher.update({
+        where: { id: newVoucher.id },
+        data: {
+          source_document_type: 'RETAIL_EXPENSE',
+          source_document_id: updatedExpense.id
+        }
+      });
+
+      // Update Attachment record if new
+      if (dto.attachment_id) {
+        await tx.attachment.update({
+          where: { id: dto.attachment_id },
+          data: {
+            entity_type: 'EXPENSE_BILL',
+            entity_id: updatedExpense.id
+          }
+        });
+      }
+
+      return updatedExpense;
+    });
   }
 
   // --- Helpers ---

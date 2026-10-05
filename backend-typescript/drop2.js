@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.$executeRawUnsafe('DROP TABLE "Expense" CASCADE;').then(() => console.log('dropped')).catch(console.error);

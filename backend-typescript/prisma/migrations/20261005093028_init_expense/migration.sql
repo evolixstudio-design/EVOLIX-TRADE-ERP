@@ -29,6 +29,7 @@ CREATE TABLE "expenses" (
     "note" TEXT,
     "status" VARCHAR(50) NOT NULL DEFAULT 'POSTED',
     "voucher_id" UUID,
+    "attachment_id" UUID,
     "created_by" UUID,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -41,6 +42,9 @@ CREATE UNIQUE INDEX "expense_categories_company_id_name_key" ON "expense_categor
 
 -- CreateIndex
 CREATE UNIQUE INDEX "expenses_voucher_id_key" ON "expenses"("voucher_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "expenses_attachment_id_key" ON "expenses"("attachment_id");
 
 -- CreateIndex
 CREATE INDEX "expenses_company_id_branch_id_date_idx" ON "expenses"("company_id", "branch_id", "date");
@@ -56,6 +60,9 @@ ALTER TABLE "expense_categories" ADD CONSTRAINT "expense_categories_ledger_id_fk
 
 -- AddForeignKey
 ALTER TABLE "expenses" ADD CONSTRAINT "expenses_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "expenses" ADD CONSTRAINT "expenses_attachment_id_fkey" FOREIGN KEY ("attachment_id") REFERENCES "attachments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "expenses" ADD CONSTRAINT "expenses_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

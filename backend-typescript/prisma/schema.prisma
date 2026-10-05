@@ -2060,6 +2060,7 @@ model Attachment {
   company      Company      @relation(fields: [company_id], references: [id], onDelete: Restrict)
   branch       Branch?      @relation(fields: [branch_id], references: [id], onDelete: SetNull)
   user         User?        @relation(fields: [created_by], references: [id], onDelete: SetNull)
+  expense      Expense?
 
   @@index([company_id, entity_type, entity_id])
   @@map("attachments")
@@ -2109,6 +2110,7 @@ model Expense {
 
   status     String  @default("POSTED") @db.VarChar(50) // 'POSTED', 'CANCELLED'
   voucher_id String? @unique @db.Uuid
+  attachment_id String? @unique @db.Uuid
 
   created_by String?  @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz
@@ -2118,6 +2120,7 @@ model Expense {
   company      Company          @relation(fields: [company_id], references: [id], onDelete: Restrict)
   branch       Branch           @relation(fields: [branch_id], references: [id], onDelete: Restrict)
   category     ExpenseCategory? @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  attachment   Attachment?      @relation(fields: [attachment_id], references: [id], onDelete: SetNull)
   user         User?            @relation(fields: [created_by], references: [id], onDelete: SetNull)
 
   @@index([company_id, branch_id, date])

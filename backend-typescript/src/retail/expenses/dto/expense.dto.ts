@@ -11,6 +11,10 @@ export class CreateExpenseDto {
   @IsUUID()
   category_id?: string;
 
+  @IsOptional()
+  @IsUUID()
+  attachment_id?: string;
+
   @IsNotEmpty()
   @IsNumber()
   @Min(0.01)

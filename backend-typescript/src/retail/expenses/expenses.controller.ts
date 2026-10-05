@@ -42,8 +42,20 @@ export class ExpensesController {
   }
 
   @Patch(':id')
-  async update(@Req() req: any, @Param('id') id: string, @Body() updateExpenseDto: any) {
-    return this.expensesService.update(req.user.company_id, req.user.id, id, updateExpenseDto);
+  async update(@Req() req: any, @Param('id') id: string, @Body() updateExpenseDto: CreateExpenseDto) {
+    if (updateExpenseDto.type === 'BUSINESS_EXPENSE' && !updateExpenseDto.category_id) {
+      throw new BadRequestException('category_id is required for BUSINESS_EXPENSE');
+    }
+    const financialYearId = req.headers['x-financial-year-id'];
+    return this.expensesService.update(
+      req.user.organization_id,
+      req.user.company_id,
+      req.user.branch_id,
+      req.user.id,
+      financialYearId,
+      id,
+      updateExpenseDto
+    );
   }
 
   @Delete(':id')
