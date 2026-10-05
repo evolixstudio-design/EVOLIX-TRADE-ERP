@@ -33,6 +33,13 @@ describe('Multi-Tenant Security Architecture (e2e)', () => {
     uniqueSuffix = Date.now().toString();
     const org = await prisma.organization.create({ data: { name: 'Test Org A', code: `ORG_${uniqueSuffix}`, is_active: true } });
     
+    const feature = await prisma.feature.upsert({
+      where: { code: 'SALES' },
+      update: {},
+      create: { code: 'SALES', name: 'Sales Module' }
+    });
+    await prisma.tenantEntitlement.create({ data: { organization_id: org.id, feature_id: feature.id } });
+    
     const companyA = await prisma.company.create({ data: { organization_id: org.id, trade_name: 'Company A', code: `CA_${uniqueSuffix}`, legal_name: 'Corp A', gstin: '111' } as any });
     const companyB = await prisma.company.create({ data: { organization_id: org.id, trade_name: 'Company B', code: `CB_${uniqueSuffix}`, legal_name: 'Corp B', gstin: '222' } as any });
     companyAId = companyA.id;
@@ -90,15 +97,12 @@ describe('Multi-Tenant Security Architecture (e2e)', () => {
     await prisma.userRole.deleteMany({});
     await prisma.rolePermission.deleteMany({});
     await prisma.permission.deleteMany({ where: { code: { contains: 'sales.read' } } });
+    await prisma.auditLog.deleteMany({ where: { user: { username: { startsWith: 'u' } } } });
     await prisma.user.deleteMany({ where: { username: { startsWith: 'u' } } });
     await prisma.role.deleteMany({ where: { name: { startsWith: 'ADMIN' } } });
     await prisma.role.deleteMany({ where: { name: { startsWith: 'RO' } } });
-    if (branchAId && branchBId) {
-      await prisma.branch.deleteMany({ where: { id: { in: [branchAId, branchBId] } } });
-    }
-    if (companyAId && companyBId) {
-      await prisma.company.deleteMany({ where: { id: { in: [companyAId, companyBId] } } });
-    }
+    await prisma.branch.deleteMany({ where: { company: { organization: { name: 'Test Org A' } } } });
+    await prisma.company.deleteMany({ where: { organization: { name: 'Test Org A' } } });
     await prisma.organization.deleteMany({ where: { name: 'Test Org A' } });
 
     await app.close();

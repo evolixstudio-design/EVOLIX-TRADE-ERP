@@ -30,3 +30,24 @@ The following modules exist in the codebase but are **frozen** for future enterp
 - **Advanced Barcode**: High-volume label generation.
 
 All these frozen frontend modules are stored in `frontend/src/future/` to keep the active workspace clean and focused on Retail V1.
+
+## ROUTE MAP
+
+### Backend
+/api/v1/retail/items
+/api/v1/retail/customers
+/api/v1/retail/suppliers
+/api/v1/retail/purchases
+/api/v1/retail/needs
+/api/v1/retail/home
+/api/v1/erp/pos
+
+### Frontend
+/retail/home
+/retail/bill
+/retail/items
+/retail/khata
+/retail/suppliers
+/retail/purchases
+/retail/needs
+/retail/more

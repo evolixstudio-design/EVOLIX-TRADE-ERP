@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import api from '../shared/api';
+import api from '../../shared/api';
 import { Trash, Plus, Shield, Users as UsersIcon, X, Edit } from 'lucide-react';
-import { Modal } from '../shared/components/Modal';
+import { Modal } from '../../shared/components/Modal';
 
 interface PermissionData {
   id: string;

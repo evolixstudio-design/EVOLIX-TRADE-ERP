@@ -24,18 +24,20 @@ export class AuthService implements OnModuleInit {
       console.log('Bootstrapping default admin user...');
       const hashedPassword = await bcrypt.hash('Evolix@2026', 10);
       
-      // Create Organization
-      const org = await this.prisma.organization.create({
-        data: {
+      const org = await this.prisma.organization.upsert({
+        where: { code: 'DEFAULT' },
+        update: {},
+        create: {
           name: 'Default Organization',
           code: 'DEFAULT',
           is_active: true,
         }
       });
 
-      // Create Company
-      const company = await this.prisma.company.create({
-        data: {
+      const company = await this.prisma.company.upsert({
+        where: { uix_companies_org_code: { organization_id: org.id, code: 'DEF-COMP' } },
+        update: {},
+        create: {
           organization_id: org.id,
           code: 'DEF-COMP',
           legal_name: 'Default Company Ltd',
@@ -44,18 +46,20 @@ export class AuthService implements OnModuleInit {
         }
       });
 
-      // Create Branch
-      const branch = await this.prisma.branch.create({
-        data: {
+      const branch = await this.prisma.branch.upsert({
+        where: { uix_branches_company_code: { company_id: company.id, code: 'HQ' } },
+        update: {},
+        create: {
           company_id: company.id,
           name: 'Main Branch',
           code: 'HQ',
         }
       });
 
-      // Create Admin Role
-      const role = await this.prisma.role.create({
-        data: {
+      const role = await this.prisma.role.upsert({
+        where: { uix_roles_org_name: { organization_id: org.id, name: 'ADMIN' } },
+        update: {},
+        create: {
           organization_id: org.id,
           name: 'ADMIN',
           description: 'Administrator',
@@ -70,20 +74,24 @@ export class AuthService implements OnModuleInit {
       ];
       
       for (const p of allPermissions) {
-        await this.prisma.permission.create({
-          data: {
+        await this.prisma.permission.upsert({
+          where: { code: p },
+          update: {},
+          create: {
             code: p,
             description: p,
             module: p.split('.')[0],
             resource: p.split('.')[0],
             action: p.split('.')[1]
           }
-        }).catch(() => {}); // ignore if already exists
+        });
 
         const perm = await this.prisma.permission.findUnique({ where: { code: p } });
         if (perm) {
-          await this.prisma.rolePermission.create({
-            data: {
+          await this.prisma.rolePermission.upsert({
+            where: { role_id_permission_id: { role_id: role.id, permission_id: perm.id } },
+            update: {},
+            create: {
               role_id: role.id,
               permission_id: perm.id,
               scope: 'ALL_COMPANIES'
@@ -93,8 +101,10 @@ export class AuthService implements OnModuleInit {
       }
 
       // Create User
-      admin = await this.prisma.user.create({
-        data: {
+      const adminUser = await this.prisma.user.upsert({
+        where: { username: 'admin' },
+        update: {},
+        create: {
           organization_id: org.id,
           username: 'admin',
           password_hash: hashedPassword,
@@ -103,10 +113,11 @@ export class AuthService implements OnModuleInit {
         }
       });
 
-      // Assign UserRole
-      await this.prisma.userRole.create({
-        data: {
-          user_id: admin.id,
+      await this.prisma.userRole.upsert({
+        where: { user_id_role_id: { user_id: adminUser.id, role_id: role.id } },
+        update: {},
+        create: {
+          user_id: adminUser.id,
           role_id: role.id,
           company_id: company.id,
           branch_id: branch.id,

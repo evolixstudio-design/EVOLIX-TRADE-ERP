@@ -31,7 +31,8 @@ export class AuthGuard implements CanActivate {
       payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET || 'evolix-super-secret-key'
       });
-    } catch {
+    } catch (err) {
+      console.error('Jwt verification failed:', err);
       throw new UnauthorizedException('Invalid or expired token');
     }
 
@@ -58,6 +59,7 @@ export class AuthGuard implements CanActivate {
     });
 
     if (!user || !user.is_active) {
+      console.error('User not found or inactive for id:', userId);
       throw new UnauthorizedException('User not found or inactive');
     }
 

@@ -37,6 +37,7 @@ import { RetailModule } from './retail/retail.module';
     PosModule,
     PricingModule,
     RetailModule,
+    SalesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

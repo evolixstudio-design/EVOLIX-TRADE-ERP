@@ -67,3 +67,13 @@ coverage.xml
 
 # Alembic auto-generated
 # (versions/ is tracked, but keep awareness)
+
+# Added for AI / Structure Task
+coverage/
+.cache/
+.vite/
+*.tmp
+*.bak
+scratch/
+archive/
+

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Plus, Play, Lock, X, Calendar } from 'lucide-react';
-import api from '../shared/api';
-import { Modal } from '../shared/components/Modal';
+import api from '../../shared/api';
+import { Modal } from '../../shared/components/Modal';
 
 interface CompanyOption { id: string; legal_name: string; code: string; }
 interface FYData {

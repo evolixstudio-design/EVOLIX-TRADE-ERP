@@ -9,14 +9,14 @@ import TenantShell from './shared/components/TenantShell';
 import PlatformShell from './shared/components/PlatformShell';
 
 // Tenant Pages
-import Users from './pages/Users';
-import Roles from './pages/Roles';
-import Sessions from './pages/Sessions';
-import Organizations from './pages/Organizations';
-import Companies from './pages/Companies';
-import Branches from './pages/Branches';
-import Godowns from './pages/Godowns';
-import FinancialYears from './pages/FinancialYears';
+import Users from './admin/tenant/Users';
+import Roles from './admin/tenant/Roles';
+import Sessions from './admin/tenant/Sessions';
+import Organizations from './admin/tenant/Organizations';
+import Companies from './admin/tenant/Companies';
+import Branches from './admin/tenant/Branches';
+import Godowns from './admin/tenant/Godowns';
+import FinancialYears from './admin/tenant/FinancialYears';
 
 // Accounting Module
 import ChartOfAccounts from './pages/Accounting/ChartOfAccounts';
@@ -31,8 +31,8 @@ import StockTransfers from './pages/Inventory/StockTransfers';
 import BarcodeLabels from './pages/Inventory/BarcodeLabels';
 
 // Platform Pages
-import PlatformDashboard from './pages/Platform/PlatformDashboard';
-import PlatformTenants from './pages/Platform/PlatformTenants';
+import PlatformDashboard from './admin/platform/PlatformDashboard';
+import PlatformTenants from './admin/platform/PlatformTenants';
 
 // ── Retail V1 Pages ──────────────────────────────
 import RetailShell from './retail/RetailShell';

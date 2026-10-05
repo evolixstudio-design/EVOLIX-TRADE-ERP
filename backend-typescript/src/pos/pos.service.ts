@@ -414,43 +414,45 @@ export class PosService {
         });
       }
 
-      receiptVoucherLines.push({
-        ledger_account_id: partyAccount.id,
-        party_id: partyId,
-        debit: 0,
-        credit: paymentTotal.toNumber()
-      });
-
-      const receiptVoucher = await this.accounting.postVoucher(tx, {
-        company_id: invoice.company_id,
-        branch_id: invoice.branch_id,
-        financial_year_id: invoice.financial_year_id,
-        voucher_type: 'RECEIPT',
-        document_number: `RCPT-${Date.now()}`,
-        voucher_date: invoice.document_date,
-        source_document_type: 'POS_RECEIPT',
-        source_document_id: invoice.id,
-        narration: `POS Payment for ${invoice.document_number}`,
-        posted_by: userId,
-        lines: receiptVoucherLines
-      });
-
-      const customerReceiptVoucherLine = receiptVoucher.lines.find(l => l.ledger_account_id === partyAccount.id);
-
-      // Allocate the receipt against the sales invoice
-      if (customerReceiptVoucherLine) {
-        await tx.billAllocation.create({
-          data: {
-            company_id: invoice.company_id,
-            party_id: invoice.party_id,
-            voucher_line_id: customerReceiptVoucherLine.id,
-            reference_document_type: 'SALES_INVOICE',
-            reference_document_id: invoice.id,
-            allocation_type: 'AGAINST_REFERENCE',
-            amount: paymentTotal,
-            due_date: invoice.document_date
-          }
+      if (paymentTotal.gt(0)) {
+        receiptVoucherLines.push({
+          ledger_account_id: partyAccount.id,
+          party_id: partyId,
+          debit: 0,
+          credit: paymentTotal.toNumber()
         });
+
+        const receiptVoucher = await this.accounting.postVoucher(tx, {
+          company_id: invoice.company_id,
+          branch_id: invoice.branch_id,
+          financial_year_id: invoice.financial_year_id,
+          voucher_type: 'RECEIPT',
+          document_number: `RCPT-${Date.now()}`,
+          voucher_date: invoice.document_date,
+          source_document_type: 'POS_RECEIPT',
+          source_document_id: invoice.id,
+          narration: `POS Payment for ${invoice.document_number}`,
+          posted_by: userId,
+          lines: receiptVoucherLines
+        });
+
+        const customerReceiptVoucherLine = receiptVoucher.lines.find(l => l.ledger_account_id === partyAccount.id);
+
+        // Allocate the receipt against the sales invoice
+        if (customerReceiptVoucherLine) {
+          await tx.billAllocation.create({
+            data: {
+              company_id: invoice.company_id,
+              party_id: invoice.party_id,
+              voucher_line_id: customerReceiptVoucherLine.id,
+              reference_document_type: 'SALES_INVOICE',
+              reference_document_id: invoice.id,
+              allocation_type: 'AGAINST_REFERENCE',
+              amount: paymentTotal,
+              due_date: invoice.document_date
+            }
+          });
+        }
       }
 
       await tx.auditLog.create({

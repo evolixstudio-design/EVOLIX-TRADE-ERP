@@ -495,7 +495,6 @@ export class RetailService {
       }
 
       if (dto.payment_status === 'CREDIT' || dto.payment_status === 'PARTIAL') {
-        const remaining = dto.total_amount - (dto.paid_amount || 0);
         const partyLedger = await tx.ledgerAccount.findFirst({ where: { party_id: dto.supplier_id, company_id: companyId } });
         
         let purchaseLedger = await tx.ledgerAccount.findFirst({ where: { name: 'Purchase Account', company_id: companyId } });
@@ -514,8 +513,8 @@ export class RetailService {
               posted_by: userId,
               lines: {
                 create: [
-                  { ledger_account_id: purchaseLedger.id, debit: remaining, credit: 0 },
-                  { ledger_account_id: partyLedger.id, debit: 0, credit: remaining, party_id: dto.supplier_id }
+                  { ledger_account_id: purchaseLedger.id, debit: dto.total_amount, credit: 0 },
+                  { ledger_account_id: partyLedger.id, debit: 0, credit: dto.total_amount, party_id: dto.supplier_id }
                 ]
               }
             }, include: { lines: true }
@@ -525,7 +524,7 @@ export class RetailService {
             data: {
               company_id: companyId, party_id: dto.supplier_id, voucher_line_id: pline!.id,
               reference_document_type: 'PURCHASE_INVOICE', reference_document_id: invoice.id,
-              allocation_type: 'NEW_REFERENCE', amount: remaining, due_date: new Date()
+              allocation_type: 'NEW_REFERENCE', amount: dto.total_amount, due_date: new Date()
             }
           });
         }
@@ -537,20 +536,29 @@ export class RetailService {
         if(!cashAccount) {
             cashAccount = await tx.ledgerAccount.findFirst({ where: { company_id: companyId, code: dto.payment_method === 'BANK' ? 'DEFAULT_BANK' : 'CASH_IN_HAND' } });
         }
-        let purchaseLedger = await tx.ledgerAccount.findFirst({ where: { name: 'Purchase Account', company_id: companyId } });
+        const partyLedger = await tx.ledgerAccount.findFirst({ where: { party_id: dto.supplier_id, company_id: companyId } });
         
-        if (cashAccount && purchaseLedger) {
-          await tx.voucher.create({
+        if (cashAccount && partyLedger) {
+          const voucher = await tx.voucher.create({
             data: {
               company_id: companyId, branch_id: branchId, financial_year_id: financialYearId,
               voucher_type: 'PAYMENT', document_number: "PMT-RET-" + Date.now(), voucher_date: new Date(), status: 'POSTED',
               posted_by: userId,
               lines: {
                 create: [
-                  { ledger_account_id: purchaseLedger.id, debit: dto.paid_amount!, credit: 0 },
+                  { ledger_account_id: partyLedger.id, debit: dto.paid_amount!, credit: 0, party_id: dto.supplier_id },
                   { ledger_account_id: cashAccount.id, debit: 0, credit: dto.paid_amount! }
                 ]
               }
+            }, include: { lines: true }
+          });
+          
+          const pline = (voucher as any).lines.find((l: any) => l.ledger_account_id === partyLedger.id);
+          await tx.billAllocation.create({
+            data: {
+              company_id: companyId, party_id: dto.supplier_id, voucher_line_id: pline!.id,
+              reference_document_type: 'PAYMENT', reference_document_id: voucher.id,
+              allocation_type: 'AGAINST_REFERENCE', amount: dto.paid_amount!, due_date: new Date()
             }
           });
         }

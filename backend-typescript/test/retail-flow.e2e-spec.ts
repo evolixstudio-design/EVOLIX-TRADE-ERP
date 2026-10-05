@@ -26,6 +26,8 @@ describe('Retail Flow (e2e)', () => {
   let testItemId: string;
   let customerId: string;
   let testInvoiceId: string;
+  let supplierId: string;
+  let needId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -43,19 +45,19 @@ describe('Retail Flow (e2e)', () => {
     orgId = uuidv4();
     const org = await prisma.organization.create({ data: { id: orgId, name: 'Test Org', code: `ORG-${Date.now()}` } });
     
-    const compA = await prisma.company.create({ data: { organization_id: orgId, name: 'Company A', code: `CA-${Date.now()}`, currency: 'INR', financial_year_start_month: 4 } });
+    const compA = await prisma.company.create({ data: { organization_id: orgId, legal_name: 'Company A Legal', trade_name: 'Company A', code: `CA-${Date.now()}` } });
     compAId = compA.id;
     
-    const compB = await prisma.company.create({ data: { organization_id: orgId, name: 'Company B', code: `CB-${Date.now()}`, currency: 'INR', financial_year_start_month: 4 } });
+    const compB = await prisma.company.create({ data: { organization_id: orgId, legal_name: 'Company B Legal', trade_name: 'Company B', code: `CB-${Date.now()}` } });
     compBId = compB.id;
 
     const branchA = await prisma.branch.create({ data: { company_id: compAId, name: 'Main Branch A', code: `MBA-${Date.now()}` } });
     branchAId = branchA.id;
 
-    const godownA = await prisma.godown.create({ data: { company_id: compAId, branch_id: branchAId, name: 'Main Godown A', code: `MGA-${Date.now()}`, godown_type: 'NORMAL' } });
+    const godownA = await prisma.godown.create({ data: { branch_id: branchAId, name: 'Main Godown A', code: `MGA-${Date.now()}` } });
     godownAId = godownA.id;
 
-    const fyA = await prisma.financialYear.create({ data: { company_id: compAId, name: '2026-2027', start_date: new Date('2026-04-01'), end_date: new Date('2027-03-31'), status: 'OPEN' } });
+    const fyA = await prisma.financialYear.create({ data: { company_id: compAId, label: '2026-2027', start_date: new Date('2026-04-01'), end_date: new Date('2027-03-31') } });
     fyAId = fyA.id;
 
     const userA = await prisma.user.create({ data: { organization_id: orgId, username: `usera_${Date.now()}`, display_name: 'User A', password_hash: 'hash' } });
@@ -63,31 +65,50 @@ describe('Retail Flow (e2e)', () => {
 
     const unit = await prisma.unit.create({ data: { company_id: compAId, name: 'Pieces', code: `PCS-${Date.now()}` } });
     unitId = unit.id;
+
+    // Seed Direct Expenses for Purchase
+    await prisma.ledgerAccount.create({ data: { company_id: compAId, name: 'Direct Expenses', account_type: 'EXPENSE', code: 'DIR-EXP' } });
+    await prisma.ledgerAccount.create({ data: { company_id: compBId, name: 'Direct Expenses', account_type: 'EXPENSE', code: 'DIR-EXP-B' } });
   });
 
   afterAll(async () => {
     // Cleanup created data
-    await prisma.stockMovement.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.stockBalanceProjection.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.voucherLine.deleteMany({ where: { voucher: { company_id: { in: [compAId, compBId] } } } });
-    await prisma.voucher.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.billAllocation.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.salesInvoiceLine.deleteMany({ where: { sales_invoice: { company_id: { in: [compAId, compBId] } } } });
-    await prisma.salesInvoice.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.openingStockLine.deleteMany({ where: { opening_stock: { company_id: { in: [compAId, compBId] } } } });
-    await prisma.openingStock.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.ledgerAccount.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.party.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.item.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+    if (compAId && compBId) {
+      await prisma.auditLog.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.stockMovement.deleteMany({ where: { branch_id: { in: [branchAId] } } });
+      await prisma.stockBalanceProjection.deleteMany({ where: { branch_id: { in: [branchAId] } } });
+      await prisma.billAllocation.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.voucherLine.deleteMany({ where: { voucher: { company_id: { in: [compAId, compBId] } } } });
+      await prisma.voucher.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.salesInvoiceLine.deleteMany({ where: { sales_invoice: { company_id: { in: [compAId, compBId] } } } });
+      await prisma.salesInvoice.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.purchaseInvoiceLine.deleteMany({ where: { purchase_invoice: { company_id: { in: [compAId, compBId] } } } });
+      await prisma.purchaseInvoice.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.openingStockLine.deleteMany({ where: { opening_stock: { company_id: { in: [compAId, compBId] } } } });
+      await prisma.openingStock.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.ledgerAccount.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.needList.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.party.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.pricingTrace.deleteMany({ where: { item: { company_id: { in: [compAId, compBId] } } } });
+      await prisma.item.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+    }
     
     // Core structure
-    await prisma.financialYear.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.unit.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.godown.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.branch.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
-    await prisma.company.deleteMany({ where: { id: { in: [compAId, compBId] } } });
-    await prisma.user.deleteMany({ where: { id: userAId } });
-    await prisma.organization.deleteMany({ where: { id: orgId } });
+    if (compAId && compBId) {
+      await prisma.financialYear.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.unit.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+    }
+    if (branchAId) await prisma.godown.deleteMany({ where: { branch_id: { in: [branchAId] } } });
+    if (compAId && compBId) {
+      await prisma.branch.deleteMany({ where: { company_id: { in: [compAId, compBId] } } });
+      await prisma.company.deleteMany({ where: { id: { in: [compAId, compBId] } } });
+    }
+    if (userAId) {
+      await prisma.user.deleteMany({ where: { id: userAId } });
+    }
+    if (orgId) {
+      await prisma.organization.deleteMany({ where: { id: orgId } });
+    }
     
     await app.close();
   });
@@ -116,7 +137,7 @@ describe('Retail Flow (e2e)', () => {
       document_date: new Date().toISOString(),
       walkin_name: 'Walkin',
       lines: [{ item_id: testItemId, godown_id: godownAId, quantity: 2, unit_id: unitId, rate: 45 }],
-      payments: [{ method: 'CASH', amount: 90 }]
+      payments: [{ payment_method: 'CASH', amount: 90 }]
     });
     expect(sale).toBeDefined();
     testInvoiceId = sale.id;
@@ -171,4 +192,125 @@ describe('Retail Flow (e2e)', () => {
     const itemsB = await retailService.getItems(compBId);
     expect(itemsB.length).toBe(0);
   });
+
+  // ============================================================
+  // PHASE 2 FLOW TESTS
+  // ============================================================
+
+  it('should create a supplier ABC Phase2 Test', async () => {
+    const supplier = await retailService.createSupplier(compAId, {
+      name: 'ABC Phase2 Test'
+    });
+    expect(supplier).toBeDefined();
+    expect(supplier.name).toBe('ABC Phase2 Test');
+    supplierId = supplier.id;
+  });
+
+  it('should add an item to the Need List', async () => {
+    const need = await retailService.createNeed(compAId, branchAId, userAId, {
+      name: 'Retail Test Oil',
+      quantity: 10,
+      preferred_supplier_id: supplierId,
+      priority: 'NORMAL',
+      customer_id: customerId
+    });
+    expect(need).toBeDefined();
+    expect(need.status).toBe('NEED');
+    needId = need.id;
+  });
+
+  it('should get need list with relationships', async () => {
+    const needs = await retailService.getNeeds(compAId);
+    expect(needs.length).toBeGreaterThan(0);
+    const myNeed = needs.find(n => n.id === needId);
+    expect(myNeed).toBeDefined();
+    // Validate relations
+    expect(myNeed!.customer).toBeDefined();
+    expect(myNeed!.preferred_supplier).toBeDefined();
+  });
+
+  it('should update need status to ORDERED', async () => {
+    const need = await retailService.updateNeedStatus(needId, compAId, { status: 'ORDERED' });
+    expect(need.status).toBe('ORDERED');
+  });
+
+  it('should process a PURCHASE with partial payment and update Khata', async () => {
+    // 1. Create Purchase
+    const purchase = await retailService.createPurchase(compAId, branchAId, fyAId, userAId, {
+      supplier_id: supplierId,
+      total_amount: 1000,
+      payment_status: 'PARTIAL',
+      paid_amount: 400,
+      payment_method: 'CASH',
+      lines: [
+        {
+          item_id: testItemId,
+          quantity: 10,
+          purchase_rate: 100
+        }
+      ]
+    });
+    expect(purchase).toBeDefined();
+
+    // 2. Verify StockProjection updated
+    const proj = await prisma.stockBalanceProjection.findFirst({
+      where: { company_id: compAId, item_id: testItemId }
+    });
+    // Original opened with 10, sold 2 (CASH) + 2 (UDHAR) = 6.
+    // Now purchased 10 -> 16
+    expect(Number(proj!.quantity)).toBe(16);
+
+    // 3. Verify Khata / Outstanding
+    const dash = await retailService.getHomeDashboard(compAId);
+    expect(dash.supplier_due).toBe(600); // 1000 - 400
+
+    const khata = await retailService.getSupplierKhata(compAId, supplierId);
+    expect(khata.balance).toBe(600);
+    // Should have 2 transactions: PURCHASE (+1000), PAYMENT (-400)
+    expect(khata.transactions.length).toBe(2);
+    const tPurch = khata.transactions.find(t => t.type === 'PURCHASE');
+    const tPay = khata.transactions.find(t => t.type === 'PAYMENT');
+    expect(tPurch!.amount).toBe(1000);
+    expect(tPay!.amount).toBe(400);
+
+    // 4. Need status to RECEIVED
+    const need = await retailService.updateNeedStatus(needId, compAId, { status: 'RECEIVED' });
+    expect(need.status).toBe('RECEIVED');
+  });
+
+  it('should pay remaining supplier balance', async () => {
+    await retailService.paySupplier(compAId, branchAId, fyAId, userAId, supplierId, {
+      amount: 600,
+      payment_method: 'CASH',
+      date: new Date().toISOString()
+    });
+
+    const khata = await retailService.getSupplierKhata(compAId, supplierId);
+    expect(khata.balance).toBe(0);
+  });
+
+  it('should process Quick Bill Purchase (no item lines)', async () => {
+    // Quick bill shouldn't affect stock projection
+    const beforeProj = await prisma.stockBalanceProjection.findFirst({
+      where: { company_id: compAId, item_id: testItemId }
+    });
+    const beforeQty = Number(beforeProj!.quantity);
+
+    await retailService.createPurchase(compAId, branchAId, fyAId, userAId, {
+      supplier_id: supplierId,
+      total_amount: 500,
+      payment_status: 'CREDIT',
+      note: 'Quick Bill Supplies',
+      lines: []
+    });
+
+    const afterProj = await prisma.stockBalanceProjection.findFirst({
+      where: { company_id: compAId, item_id: testItemId }
+    });
+    expect(Number(afterProj!.quantity)).toBe(beforeQty); // unchanged
+
+    const khata = await retailService.getSupplierKhata(compAId, supplierId);
+    expect(khata.balance).toBe(500); // 0 + 500
+  });
+
 });

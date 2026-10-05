@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Ban, CheckCircle, X } from 'lucide-react';
-import api from '../shared/api';
-import { Modal } from '../shared/components/Modal';
+import api from '../../shared/api';
+import { Modal } from '../../shared/components/Modal';
 
 interface BranchOption { id: string; name: string; code: string; }
 interface GodownData {
